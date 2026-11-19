@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PING OS-1 · Transfer</title>
+<style>
+  :root { --bg: #000; --fg: #f2f2f2; --dim: #8a8a8a; --line: #2a2a2a; --acc: #ff8424; --yel: #dddc01; --red: #ff5c3d; --teal: #33b29f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 -apple-system, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 20px 60px; }
+  header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+  header h1 { font-size: 30px; font-weight: 600; letter-spacing: 0.04em; margin: 0; }
+  header h1 span { color: var(--yel); }
+  header .what { color: var(--dim); font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; font-size: 13px; }
+  header .manual { margin-left: auto; color: var(--dim); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; border: 1px solid var(--line, #ccc); border-radius: 999px; padding: 4px 12px; }
+  header .manual:hover { color: inherit; }
+  .sub { color: var(--dim); margin: 0 0 28px; }
+  h2 { font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--acc); margin: 40px 0 12px; }
+  .drop { border: 1px dashed var(--line); border-radius: 10px; padding: 26px; text-align: center; color: var(--dim); cursor: pointer; }
+  .drop.over { border-color: var(--acc); color: var(--fg); }
+  .drop input { display: none; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+  td, th { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; font-weight: 400; }
+  th { color: var(--dim); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+  td.n { color: var(--dim); width: 28px; }
+  input[type=text] { background: #111; border: 1px solid var(--line); color: var(--fg); padding: 5px 8px; border-radius: 6px; width: 150px; font: inherit; text-transform: uppercase; }
+  select { background: #111; border: 1px solid var(--line); color: var(--fg); padding: 5px 6px; border-radius: 6px; font: inherit; }
+  button { background: var(--acc); color: #000; border: 0; border-radius: 8px; padding: 10px 18px; font: inherit; font-weight: 600; cursor: pointer; }
+  button.plain { background: #1b1b1b; color: var(--fg); }
+  button.small { padding: 5px 10px; font-weight: 400; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 14px 0 6px; }
+  .bar i { display: block; height: 100%; background: var(--acc); width: 0; transition: width 0.2s; }
+  .bar i.over { background: var(--red); }
+  .cap { color: var(--dim); font-size: 13px; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+  .status { color: var(--fg); min-height: 1.4em; margin-top: 10px; }
+  .status.bad { color: var(--red); }
+  .status.ok { color: var(--teal); }
+  .meter { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; flex: 1; min-width: 120px; }
+  .meter i { display: block; height: 100%; background: var(--teal); width: 0; }
+  .rec { background: var(--red); color: #fff; }
+  .hint { color: var(--dim); font-size: 13px; }
+  footer { margin-top: 48px; color: var(--dim); font-size: 12px; }
+  footer a { color: var(--dim); }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>PING <span>FM1</span></h1><span class="what">Transfer</span><a class="manual" href="../manual/">Manual</a></header>
+  <p class="sub">Load up to eight sounds into the FM-1, record what it plays, and save its pattern as MIDI. Chrome or Edge, with the FM-1 on USB.</p>
+
+  <h2>The bank</h2>
+  <label class="drop" id="drop">Drop WAV, AIFF or MP3 files here, or click to choose<input type="file" id="files" accept="audio/*" multiple></label>
+  <table id="list" hidden>
+    <thead><tr><th></th><th>Name</th><th>Length</th><th>Rate</th><th>Size</th><th></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div class="bar"><i id="fill"></i></div>
+  <div class="cap" id="cap">Nothing yet. The bank holds 73,728 bytes: about 4.6 s at 32 kHz, 9 s at 16 kHz.</div>
+  <div class="row">
+    <button id="send" disabled>Send to the FM-1</button>
+    <button class="plain" id="save">Save the bank file</button>
+    <span class="hint">A lower rate makes room; 32 kHz for hits, 16 kHz for long material.</span>
+  </div>
+  <div class="status" id="status"></div>
+
+  <h2>Record the FM-1</h2>
+  <p class="hint">The FM-1 is a USB audio input. Pick it, press record, play; stop gives you a WAV.</p>
+  <div class="row">
+    <select id="inputs"><option>Looking for inputs…</option></select>
+    <button id="rec" class="rec">● Record</button>
+    <button id="stop" class="plain" disabled>■ Stop</button>
+    <div class="meter"><i id="level"></i></div>
+    <span id="rectime" class="hint">0:00</span>
+  </div>
+  <div class="status" id="recstatus"></div>
+
+  <h2>The pattern as MIDI</h2>
+  <p class="hint">Saves the four tracks of the pattern now on the FM-1 as a MIDI file, a track each on channels 1 to 4, at its tempo.</p>
+  <div class="row">
+    <select id="bars"><option value="1">1 bar</option><option value="2">2 bars</option><option value="4" selected>4 bars</option><option value="8">8 bars</option><option value="16">16 bars</option></select>
+    <button id="midi">Save the pattern as MIDI</button>
+    <span class="hint">Tracks shorter than this repeat. CHANCE steps always play; parameter locks are not in the file.</span>
+  </div>
+  <div class="status" id="midistatus"></div>
+
+  <h2>The project, for the plugin</h2>
+  <p class="hint">Saves the project on the FM-1 (its sounds, effects, patterns, song and samples) as a file the PING OS-1 plugin opens in a DAW. Press SAVE on the FM-1 first: the file holds the project as it was last saved.</p>
+  <div class="row">
+    <button id="project">Save the project for the plugin</button>
+  </div>
+  <div class="status" id="projectstatus"></div>
+
+  <footer>Nothing here leaves this computer: the page talks to the FM-1 over USB only. Built on fm1-base's transfer code (Charles Vestal, MPL-2.0).</footer>
+</main>
+<script>
+/*LIB*/
+</script>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const CAP = 73728, HEAD = 8 + 8 * 32, SMP_REQ = 0x50, OK_ADDR = 0xC0000000, FAIL_ADDR = 0xCF000000;
+const RATES = [32000, 22050, 16000, 11025];
+const STEP = [7,8,9,10,11,12,13,14,16,17,19,21,23,25,28,31,34,37,41,45,50,55,60,66,73,80,88,97,107,118,130,143,157,173,190,209,230,253,279,307,337,371,408,449,494,544,598,658,724,796,876,963,1060,1166,1282,1411,1552,1707,1878,2066,2272,2499,2749,3024,3327,3660,4026,4428,4871,5358,5894,6484,7132,7845,8630,9493,10442,11487,12635,13899,15289,16818,18500,20350,22385,24623,27086,29794,32767];
+const INDEX = [-1,-1,-1,-1,2,4,6,8,-1,-1,-1,-1,2,4,6,8];
+const FAIL_WHY = { 2: "the transfer stopped", 7: "the flash would not erase", 8: "the flash would not write", 22: "what was written did not check" };
+
+/* the engine's blocked IMA ADPCM (engine/ch_adpcm.c): 64 frames a block, a 4-byte head, the codes chosen greedily */
+function adpcm(pcm) {
+  const blocks = Math.ceil(pcm.length / 64), out = new Uint8Array(blocks * 36);
+  let ix = 0;
+  for (let b = 0; b < blocks; b++) {
+    const start = b * 64, o = b * 36;
+    let p = pcm[start];
+    out[o] = p & 255; out[o + 1] = (p >> 8) & 255; out[o + 2] = ix; out[o + 3] = 0;
+    for (let i = 0; i < 64; i++) {
+      const target = start + i < pcm.length ? pcm[start + i] : 0;
+      let best = 0, be = 1 << 30, bp = 0, bi = 0;
+      for (let code = 0; code < 16; code++) {
+        const st = STEP[ix]; let d = st >> 3;
+        if (code & 4) d += st; if (code & 2) d += st >> 1; if (code & 1) d += st >> 2;
+        let q = code & 8 ? p - d : p + d; q = q > 32767 ? 32767 : q < -32768 ? -32768 : q;
+        let j = ix + INDEX[code]; j = j < 0 ? 0 : j > 88 ? 88 : j;
+        const e = Math.abs(q - target);
+        if (e < be) { be = e; best = code; bp = q; bi = j; }
+      }
+      p = bp; ix = bi;
+      if (i & 1) out[o + 4 + (i >> 1)] |= best << 4; else out[o + 4 + (i >> 1)] = best;
+    }
+  }
+  return out;
+}
+
+const items = [];                                           /* {name, file, buffer (decoded), rate, pcm, enc} */
+const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+const secs = (s) => s < 10 ? s.toFixed(2) + " s" : s.toFixed(1) + " s";
+
+async function decode(file) {
+  const ac = new (window.AudioContext || window.webkitAudioContext)();
+  const buf = await ac.decodeAudioData(await file.arrayBuffer());
+  ac.close();
+  return buf;
+}
+/* mono at the rate, peak-normalised to -1 dB, as int16 */
+async function render(buffer, rate) {
+  const len = Math.max(1, Math.round(buffer.duration * rate));
+  const oc = new OfflineAudioContext(1, len, rate);
+  const src = oc.createBufferSource(); src.buffer = buffer; src.connect(oc.destination); src.start();
+  const out = (await oc.startRendering()).getChannelData(0);
+  let peak = 0; for (let i = 0; i < out.length; i++) peak = Math.max(peak, Math.abs(out[i]));
+  const g = peak > 0 ? 0.891 / peak : 1;
+  const pcm = new Int16Array(out.length);
+  for (let i = 0; i < out.length; i++) pcm[i] = Math.max(-32768, Math.min(32767, Math.round(out[i] * g * 32767)));
+  return pcm;
+}
+async function prepare(it) {
+  it.pcm = await render(it.buffer, it.rate);
+  it.enc = adpcm(it.pcm);
+}
+function total() { return HEAD + items.reduce((a, it) => a + (it.enc ? it.enc.length : 0), 0); }
+function draw() {
+  const rows = $("rows"); rows.textContent = "";
+  items.forEach((it, i) => {
+    const tr = document.createElement("tr");
+    const td = (html) => { const d = document.createElement("td"); d.innerHTML = html; tr.append(d); return d; };
+    td(String(i + 1)).className = "n";
+    const nm = td(""); const inp = document.createElement("input"); inp.type = "text"; inp.maxLength = 13; inp.value = it.name;
+    inp.addEventListener("input", () => { it.name = inp.value.toUpperCase().slice(0, 13); }); nm.append(inp);
+    td(secs(it.pcm.length / it.rate));
+    const rt = td(""); const sel = document.createElement("select");
+    RATES.forEach((r) => { const o = document.createElement("option"); o.value = r; o.textContent = (r / 1000).toFixed(r % 1000 ? 2 : 0).replace(/\.?0+$/, "") + " kHz"; if (r === it.rate) o.selected = true; sel.append(o); });
+    sel.addEventListener("change", async () => { it.rate = +sel.value; await prepare(it); draw(); }); rt.append(sel);
+    td((it.enc.length / 1024).toFixed(1) + " KB");
+    const act = td("");
+    const up = document.createElement("button"); up.className = "plain small"; up.textContent = "↑"; up.disabled = i === 0;
+    up.addEventListener("click", () => { [items[i - 1], items[i]] = [items[i], items[i - 1]]; draw(); });
+    const rm = document.createElement("button"); rm.className = "plain small"; rm.textContent = "remove";
+    rm.addEventListener("click", () => { items.splice(i, 1); draw(); });
+    act.append(up, " ", rm);
+    rows.append(tr);
+  });
+  $("list").hidden = !items.length;
+  const n = total(), over = n > CAP;
+  $("fill").style.width = Math.min(100, n * 100 / CAP) + "%"; $("fill").className = over ? "over" : "";
+  $("cap").textContent = items.length ? `${n.toLocaleString()} of ${CAP.toLocaleString()} bytes` + (over ? " — over: lower a rate, or remove one" : "") : "Nothing yet. The bank holds 73,728 bytes: about 4.6 s at 32 kHz, 9 s at 16 kHz.";
+  $("send").disabled = !items.length || over;
+  $("save").disabled = !items.length || over;
+}
+async function add(files) {
+  for (const f of files) {
+    if (items.length >= 8) { say("Eight is the most the bank holds.", "bad"); break; }
+    try {
+      const buffer = await decode(f);
+      const it = { name: f.name.replace(/\.[^.]+$/, "").toUpperCase().replace(/[^A-Z0-9 ]/g, " ").trim().slice(0, 13) || "SAMPLE", buffer, rate: buffer.duration > 1.5 ? 16000 : 32000 };
+      await prepare(it);
+      items.push(it);
+    } catch (e) { say(`${f.name}: could not be read (${e.message})`, "bad"); }
+  }
+  draw();
+}
+$("files").addEventListener("change", (e) => add([...e.target.files]));
+const drop = $("drop");
+drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); add([...e.dataTransfer.files].filter((f) => /audio|wav|aif|mp3|flac|ogg/i.test(f.type + f.name))); });
+
+/* the bank: the table (SMPB, the count, eight entries), then the samples */
+function bank() {
+  const n = total(), out = new Uint8Array(n), dv = new DataView(out.buffer);
+  dv.setUint32(0, 0x42504D53, true); dv.setUint32(4, items.length, true);
+  let off = HEAD;
+  items.forEach((it, i) => {
+    const e = 8 + i * 32;
+    dv.setUint32(e, off, true); dv.setUint32(e + 4, it.enc.length, true); dv.setUint32(e + 8, it.pcm.length, true); dv.setUint32(e + 12, it.rate, true);
+    dv.setUint16(e + 16, 0, true);
+    const nm = new TextEncoder().encode(it.name.slice(0, 13));
+    out.set(nm, e + 18);
+    out.set(it.enc, off); off += it.enc.length;
+  });
+  return out;
+}
+function say(txt, cls = "") { $("status").textContent = txt; $("status").className = "status " + cls; }
+$("save").addEventListener("click", () => {
+  const b = bank(), a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([b], { type: "application/octet-stream" })); a.download = "ping-samples.bin"; a.click();
+});
+$("send").addEventListener("click", async () => {
+  if (!navigator.requestMIDIAccess) { say("This browser has no Web MIDI: use Chrome or Edge.", "bad"); return; }
+  const payload = bank(), crc = crc32(payload);
+  say("Looking for the FM-1…");
+  let midi;
+  try { midi = await navigator.requestMIDIAccess({ sysex: true }); } catch (e) { say("MIDI access was refused.", "bad"); return; }
+  const up = new Updater(midi, () => {});
+  const dev = await up.findAny((id) => !/^ota-/i.test(id.model));
+  if (!dev) { say("No FM-1 answered. Is it on, on USB, and not open in another app?", "bad"); return; }
+  const { link } = dev;
+  try {
+    say(`Sending ${payload.length.toLocaleString()} bytes to ${dev.id.text}…`);
+    link.drain();
+    link.send(frame(SMP_REQ, [...le32(payload.length), ...le32(crc)]));
+    let last = Date.now();
+    for (;;) {
+      const pkt = await link.read(500);
+      if (!pkt) {
+        if (link.lost) throw new Error("the FM-1 was disconnected");
+        if (Date.now() - last > 15000) throw new Error("the FM-1 stopped asking for the bank");
+        continue;
+      }
+      const r = parseRequest(pkt);
+      if (!r) continue;
+      last = Date.now();
+      const top = (r.addr & 0xFF000000) >>> 0;
+      if (top === OK_ADDR || top === FAIL_ADDR) {
+        link.send(response(r.addr, [...new TextEncoder().encode("success"), 0], r.fl));
+        if (top === OK_ADDR) { say(`Done: ${items.length} sample${items.length === 1 ? "" : "s"} on the FM-1.`, "ok"); return; }
+        const code = r.addr & 0xFFFF;
+        throw new Error(FAIL_WHY[code] || `the FM-1 reported ${code}`);
+      }
+      if (r.len > 512 || r.addr + r.len > payload.length) throw new Error(`a bad request ${r.addr.toString(16)}+${r.len}`);
+      if (!link.send(response(r.addr, Array.from(payload.subarray(r.addr, r.addr + r.len)), r.fl))) throw new Error("the FM-1 was disconnected");
+      say(`Sending… ${Math.round((r.addr + r.len) * 100 / payload.length)}%`);
+    }
+  } catch (e) { say("Not loaded: " + e.message, "bad"); }
+  finally { link.close(); }
+});
+
+/* ---- the pattern as a MIDI file ----
+ * The FM-1 sends (command 0x51) a head, version 1: the tempo x 10 (16 bits), the swing (0..255), then for each track its
+ * engine, flags (1 muted, 2 a KIT, 4 a DRUM) and a 12-byte name; then the pattern as it saves it (engine/ch_core.c,
+ * pack_from, format PAT7). The file is made here, playing the pattern as the sequencer does (seq_run and lane_hit). */
+/*MIDI-BEGIN*/
+const MX_REQ = 0x51, MX_HEAD = 4 + 4 * 14, PPQ = 480, RATE_BEATS = [0.125, 0.25, 1 / 6, 0.5, 1];
+function parsePattern(d) {
+  if (d[0] !== 1) throw new Error("this page is older than the firmware");
+  const out = { bpm: (d[1] | d[2] << 8) / 10, swing: d[3] / 255, tracks: [] };
+  for (let t = 0; t < 4; t++) {
+    const o = 4 + t * 14;
+    out.tracks.push({ dev: d[o], muted: !!(d[o + 1] & 1), kit: !!(d[o + 1] & 2), drum: !!(d[o + 1] & 4),
+      name: String.fromCharCode(...d.slice(o + 2, o + 14).filter((c) => c)) });
+  }
+  let n = MX_HEAD;
+  if (d[n] !== 0x50 || d[n + 1] !== 0x41 || d[n + 2] !== 0x54 || d[n + 3] !== 0x37) throw new Error("the pattern is in a format this page does not know");
+  n += 4;
+  for (let t = 0; t < 4; t++) {
+    const tr = out.tracks[t];
+    tr.len = d[n++] || 16; tr.dir = d[n++]; tr.rate = d[n++];
+    tr.note = []; for (let l = 0; l < 8; l++) tr.note.push(d[n++]);
+    tr.step = [];
+    for (let l = 0; l < 8; l++) {
+      const row = [];
+      for (let b = 0; b < 8; b++) { const m = d[n++]; for (let k = 0; k < 8; k++) row.push(m >> k & 1 ? { vel: 100, ratchet: 1, cycA: 0, cycB: 0, micro: 0, tie: 0, gate: 100, oct: 0 } : null); }
+      tr.step.push(row);
+    }
+    const recs = d[n] | d[n + 1] << 8; n += 2;
+    for (let r = 0; r < recs; r++, n += 8) {
+      const l = d[n], i = d[n + 1], v = (d[n + 2] | d[n + 3] << 8 | d[n + 4] << 16 | d[n + 5] << 24) >>> 0, ug = d[n + 6];
+      if (l >= 8 || i >= 64) continue;
+      const ci = v >>> 16 & 63; let b = 0; while (b < 8 && b * (b - 1) / 2 + b < ci) b++;
+      tr.step[l][i] = { vel: v & 127, ratchet: ((v >>> 7 & 3) | (v >>> 22 & 1) << 2) + 1, cycA: ci ? ci - b * (b - 1) / 2 : 0, cycB: ci ? b : 0,
+        micro: (v >>> 24 & 127) - 50, tie: v >>> 31, gate: Math.floor((100 * (15 - (ug & 15)) + 7) / 15), oct: ((ug >> 4 & 7) ^ 4) - 4 };
+    }
+  }
+  return out;
+}
+/* one track's notes over `bars` bars: [{on, off, note, vel}], in beats */
+function trackNotes(tr, swing, bars) {
+  const sb = RATE_BEATS[tr.rate < 5 ? tr.rate : 1], end = bars * 4, notes = [], last = new Array(8).fill(null);
+  const share = (g) => Math.max(0.03, g * 0.0097), held = !tr.kit && !tr.drum;
+  let pos = -1, pass = 0, pend = 1;
+  for (let count = 0; count * sb < end - 1e-9; count++) {
+    const len = tr.len;                                     /* the next step: forward, backward, or there and back (RND goes forward here) */
+    if (tr.dir === 1) { if (pos < 0) pos = len - 1; else if (--pos < 0) { pos = len - 1; pass++; } }
+    else if (tr.dir === 2) {
+      if (pos < 0) { pos = 0; pend = 1; }
+      else if (len === 1) pass++;
+      else { pos += pend; if (pos >= len) { pos = len - 2; pend = -1; } if (pos < 0) { pos = 1; pend = 1; pass++; } }
+    } else { if (pos < 0) pos = 0; else if (++pos >= len) { pos = 0; pass++; } }
+    let base = count * sb;
+    if ((count & 1) && tr.rate <= 1) base += swing * 0.5 * sb;
+    for (let l = 0; l < 8; l++) {
+      const st = tr.step[l][pos];
+      if (!st || !st.vel) continue;
+      if (st.cycB && pass % st.cycB !== st.cycA - 1) continue;
+      const at = Math.max(0, base + st.micro * 0.01 * sb), nx = tr.step[l][(pos + 1) % len], longer = !!(nx && nx.vel && nx.tie);
+      const gs = share(st.gate), r = st.ratchet;
+      if (held && st.tie && last[l] && last[l].off >= at - 1e-6) {       /* tied: the note before holds on through this step */
+        last[l].off = longer && r <= 1 ? at + sb * 1.08 : at + sb * gs;
+        continue;
+      }
+      let note = tr.note[l];
+      if (st.oct && !tr.kit) { note += 12 * st.oct; while (note > 127) note -= 12; while (note < 1) note += 12; }
+      if (r >= 5) {                                           /* a roll: four hits, the gaps a geometric series over 92 % of the step */
+        const q = r === 5 || r === 7 ? 0.6 : 1 / 0.6; let gap = sb * 0.92 * (1 - q) / (1 - q * q * q), t = at;
+        for (let h = 0; h < 4; h++) {
+          const k = (3 - h) / 3, f = r === 7 ? 0.25 + 0.75 * (1 - k) * (1 - k) : r === 8 ? 0.25 + 0.75 * k * k : 1;
+          notes.push(last[l] = { on: t, off: t + gap * gs, note, vel: Math.max(1, Math.min(127, Math.round(st.vel * f))) });
+          t += gap; gap *= q;
+        }
+      } else {
+        for (let h = 0; h < r; h++) {
+          const t = at + h * sb / r;
+          notes.push(last[l] = { on: t, off: longer && r <= 1 ? t + sb * 1.08 : t + sb * gs / r, note, vel: st.vel });
+        }
+      }
+    }
+  }
+  return notes;
+}
+function toMidi(data, bars) {
+  const pat = parsePattern(data);
+  const vlq = (v) => { const o = [v & 127]; while ((v >>>= 7)) o.unshift(v & 127 | 128); return o; };
+  const text = (s) => [...s].map((c) => c.charCodeAt(0) & 127);
+  const chunk = (id, body) => [...text(id), body.length >>> 24 & 255, body.length >>> 16 & 255, body.length >>> 8 & 255, body.length & 255, ...body];
+  const us = Math.round(60000000 / pat.bpm), endTick = bars * 4 * PPQ;
+  const tracks = [[0, 0xFF, 0x03, 9, ...text("PING OS-1"), 0, 0xFF, 0x51, 3, us >>> 16 & 255, us >>> 8 & 255, us & 255, 0, 0xFF, 0x58, 4, 4, 2, 24, 8, ...vlq(endTick), 0xFF, 0x2F, 0]];
+  let count = 0;
+  pat.tracks.forEach((tr, t) => {
+    const ev = [];
+    for (const n of trackNotes(tr, pat.swing, bars)) {
+      const on = Math.round(n.on * PPQ), off = Math.max(on + 1, Math.round(n.off * PPQ));
+      ev.push([on, 1, 0x90 | t, n.note, n.vel], [off, 0, 0x80 | t, n.note, 0]); count++;
+    }
+    ev.sort((a, b) => a[0] - b[0] || a[1] - b[1]);          /* (at the same tick: the offs first) */
+    const name = `T${t + 1} ${tr.name}`.slice(0, 30), body = [0, 0xFF, 0x03, name.length, ...text(name)];
+    let at = 0;
+    for (const e of ev) { body.push(...vlq(e[0] - at), e[2], e[3], e[4]); at = e[0]; }
+    body.push(...vlq(Math.max(0, endTick - at)), 0xFF, 0x2F, 0);
+    tracks.push(body);
+  });
+  const file = [...chunk("MThd", [0, 1, 0, tracks.length, PPQ >> 8, PPQ & 255])];
+  for (const b of tracks) file.push(...chunk("MTrk", b));
+  return { bytes: new Uint8Array(file), notes: count, bpm: pat.bpm };
+}
+/*MIDI-END*/
+$("midi").addEventListener("click", async () => {
+  const say2 = (txt, cls = "") => { $("midistatus").textContent = txt; $("midistatus").className = "status " + cls; };
+  if (!navigator.requestMIDIAccess) { say2("This browser has no Web MIDI: use Chrome or Edge.", "bad"); return; }
+  say2("Looking for the FM-1…");
+  let midi;
+  try { midi = await navigator.requestMIDIAccess({ sysex: true }); } catch (e) { say2("MIDI access was refused.", "bad"); return; }
+  const up = new Updater(midi, () => {});
+  const dev = await up.findAny((id) => !/^ota-/i.test(id.model));
+  if (!dev) { say2("No FM-1 answered. Is it on, on USB, and not open in another app?", "bad"); return; }
+  const { link } = dev;
+  try {
+    link.drain();
+    link.send(frame(MX_REQ, []));
+    let buf = null, got = 0, total = 0; const end = Date.now() + 5000;
+    while (!buf || got < total) {
+      const pkt = await link.read(500);
+      if (!pkt) {
+        if (link.lost) throw new Error("the FM-1 was disconnected");
+        if (Date.now() > end) throw new Error(buf ? "the pattern stopped part way" : "the FM-1 did not answer: it needs the firmware that has MIDI export");
+        continue;
+      }
+      if (pkt[0] !== 0xF0 || pkt[pkt.length - 1] !== 0xF7) continue;
+      const u = unpack7(pkt.slice(1, -1));
+      if (u.length < 9 || u[0] !== 0 || u[1] !== 0x59 || u[2] !== MX_REQ) continue;
+      const off = u[3] | u[4] << 8, k = u[7]; let s = 0;
+      for (let i = 3; i < 8 + k; i++) s += u[i];
+      if ((~s & 0xFF) !== u[8 + k]) throw new Error("a frame did not check");
+      total = u[5] | u[6] << 8;
+      if (!total) throw new Error("the FM-1 could not send the pattern");
+      if (!buf) buf = new Uint8Array(total);
+      buf.set(u.slice(8, 8 + k), off); got += k;
+    }
+    const bars = +$("bars").value, m = toMidi(buf, bars);
+    const a = document.createElement("a"); const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+    a.href = URL.createObjectURL(new Blob([m.bytes], { type: "audio/midi" })); a.download = `ping-os-1-${stamp}.mid`; a.click();
+    say2(`Saved ${bars} bar${bars === 1 ? "" : "s"}, ${m.notes} notes, at ${m.bpm} BPM.`, "ok");
+  } catch (e) { say2("Not saved: " + e.message, "bad"); }
+  finally { link.close(); }
+});
+
+/* ---- the saved project as a file for the plugin ----
+ * The FM-1 sends it a piece a request (command 0x52: kind 1 a store object by its number, kind 2 the sample bank,
+ * kind 3 done), 96 bytes a frame; the file is "PNGP", version 1, then records: a kind byte (1 an object, 2 a stretch
+ * of the flash), its number or offset, its length (32 bits, low byte first), its bytes; a 0 ends it. */
+const PX_REQ = 0x52, PX_OBJECTS = 27, PX_SKIP = [0, 2], PX_BANK_AT = 0xC9000;   /* (skipped: the device's own settings and panel calibration) */
+async function pxPiece(link, kind, id) {
+  let buf = null, got = 0, tries = 0;
+  for (;;) {
+    link.send(frame(PX_REQ, [kind, id, got & 255, got >> 8 & 255, got >> 16 & 255]));
+    const end = Date.now() + 1000; let u = null;
+    while (!u) {
+      const pkt = await link.read(250);
+      if (!pkt) {
+        if (link.lost) throw new Error("the FM-1 was disconnected");
+        if (Date.now() > end) break;
+        continue;
+      }
+      if (pkt[0] !== 0xF0 || pkt[pkt.length - 1] !== 0xF7) continue;
+      const v = unpack7(pkt.slice(1, -1));
+      if (v.length < 13 || v[0] !== 0 || v[1] !== 0x59 || v[2] !== PX_REQ || v[3] !== kind || v[4] !== id) continue;
+      if ((v[5] | v[6] << 8 | v[7] << 16) !== got) continue;        /* (an answer to an earlier ask) */
+      u = v;
+    }
+    if (!u) {
+      if (++tries >= 5) throw new Error(buf || kind !== 1 || id !== 1 ? "the FM-1 stopped answering part way (if it is playing a song, stop it and try again)" : "the FM-1 did not answer: it needs the firmware that has the project export");
+      continue;
+    }
+    tries = 0;
+    const k = u[11]; let sum = 0;
+    for (let i = 3; i < 12 + k; i++) sum += u[i];
+    if ((~sum & 0xFF) !== u[12 + k]) throw new Error("a frame did not check");
+    const total = u[8] | u[9] << 8 | u[10] << 16;
+    if (!total) return null;
+    if (!buf) buf = new Uint8Array(total);
+    if (!k || got + k > buf.length) throw new Error("the FM-1 sent a piece that does not fit");
+    buf.set(u.slice(12, 12 + k), got); got += k;
+    if (got >= total) return buf;
+  }
+}
+function pxFile(pieces) {            /* pieces: [{kind, id, bytes}] */
+  const le = (v) => [v & 255, v >>> 8 & 255, v >>> 16 & 255, v >>> 24 & 255];
+  const out = [0x50, 0x4E, 0x47, 0x50, ...le(1)];
+  for (const q of pieces) { out.push(q.kind, ...le(q.id), ...le(q.bytes.length)); for (const b of q.bytes) out.push(b); }
+  out.push(0);
+  return new Uint8Array(out);
+}
+$("project").addEventListener("click", async () => {
+  const say3 = (txt, cls = "") => { $("projectstatus").textContent = txt; $("projectstatus").className = "status " + cls; };
+  if (!navigator.requestMIDIAccess) { say3("This browser has no Web MIDI: use Chrome or Edge.", "bad"); return; }
+  say3("Looking for the FM-1…");
+  let midi;
+  try { midi = await navigator.requestMIDIAccess({ sysex: true }); } catch (e) { say3("MIDI access was refused.", "bad"); return; }
+  const up = new Updater(midi, () => {});
+  const dev = await up.findAny((id) => !/^ota-/i.test(id.model));
+  if (!dev) { say3("No FM-1 answered. Is it on, on USB, and not open in another app?", "bad"); return; }
+  const { link } = dev;
+  try {
+    link.drain();
+    const pieces = []; let bytes = 0;
+    for (let o = 1; o < PX_OBJECTS; o++) {            /* (the project first: an FM-1 without the export is told from its silence) */
+      if (PX_SKIP.includes(o)) continue;
+      say3(`Reading the project… ${Math.round(100 * o / (PX_OBJECTS + 4))}%`);
+      const b = await pxPiece(link, 1, o);
+      if (b) { pieces.push({ kind: 1, id: o, bytes: b }); bytes += b.length; }
+    }
+    if (!pieces.some((q) => q.id === 1)) throw new Error("nothing is saved on the FM-1 yet: press SAVE on it first");
+    say3("Reading the samples…");
+    const bank = await pxPiece(link, 2, 0);
+    if (bank) { pieces.push({ kind: 2, id: PX_BANK_AT, bytes: bank }); bytes += bank.length; }
+    link.send(frame(PX_REQ, [3, 0, 0, 0, 0]));
+    const file = pxFile(pieces);
+    const a = document.createElement("a"); const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+    a.href = URL.createObjectURL(new Blob([file], { type: "application/octet-stream" })); a.download = `ping-os-1-${stamp}.pingos`; a.click();
+    say3(`Saved the project: ${bytes.toLocaleString()} bytes${bank ? ", with its samples" : ", no samples"}. Open it in the plugin with PROJECT, Open a project.`, "ok");
+  } catch (e) { say3("Not saved: " + e.message, "bad"); }
+  finally { link.close(); }
+});
+
+/* ---- recording the FM-1's USB audio ---- */
+let stream = null, ctx = null, proc = null, chunks = [], recRate = 48000, recStart = 0, tick = null;
+async function listInputs() {
+  try { await navigator.mediaDevices.getUserMedia({ audio: true }).then((s) => s.getTracks().forEach((t) => t.stop())); } catch (_) {}
+  const devs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === "audioinput");
+  const sel = $("inputs"); sel.textContent = "";
+  devs.forEach((d) => { const o = document.createElement("option"); o.value = d.deviceId; o.textContent = d.label || "input"; if (/fm-?1|ping/i.test(d.label)) o.selected = true; sel.append(o); });
+  if (!devs.length) { const o = document.createElement("option"); o.textContent = "No audio input found"; sel.append(o); }
+}
+$("rec").addEventListener("click", async () => {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: $("inputs").value }, echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 2 } });
+  } catch (e) { $("recstatus").textContent = "Could not open the input: " + e.message; $("recstatus").className = "status bad"; return; }
+  ctx = new AudioContext(); recRate = ctx.sampleRate;
+  const src = ctx.createMediaStreamSource(stream);
+  proc = ctx.createScriptProcessor(4096, 2, 2);
+  chunks = [];
+  proc.onaudioprocess = (e) => {
+    const l = e.inputBuffer.getChannelData(0), r = e.inputBuffer.numberOfChannels > 1 ? e.inputBuffer.getChannelData(1) : l;
+    chunks.push([Float32Array.from(l), Float32Array.from(r)]);
+    let pk = 0; for (let i = 0; i < l.length; i += 8) pk = Math.max(pk, Math.abs(l[i]), Math.abs(r[i]));
+    $("level").style.width = Math.min(100, pk * 100) + "%";
+  };
+  src.connect(proc); proc.connect(ctx.destination);
+  recStart = Date.now(); tick = setInterval(() => { $("rectime").textContent = fmt((Date.now() - recStart) / 1000); }, 250);
+  $("rec").disabled = true; $("stop").disabled = false;
+  $("recstatus").textContent = "Recording…"; $("recstatus").className = "status";
+});
+$("stop").addEventListener("click", () => {
+  clearInterval(tick); $("rec").disabled = false; $("stop").disabled = true;
+  proc.disconnect(); stream.getTracks().forEach((t) => t.stop()); ctx.close();
+  const n = chunks.reduce((a, c) => a + c[0].length, 0), bytes = 44 + n * 4, buf = new ArrayBuffer(bytes), dv = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, "RIFF"); dv.setUint32(4, bytes - 8, true); w(8, "WAVEfmt "); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 2, true);
+  dv.setUint32(24, recRate, true); dv.setUint32(28, recRate * 4, true); dv.setUint16(32, 4, true); dv.setUint16(34, 16, true); w(36, "data"); dv.setUint32(40, n * 4, true);
+  let o = 44;
+  for (const [l, r] of chunks) for (let i = 0; i < l.length; i++) { dv.setInt16(o, Math.max(-32768, Math.min(32767, Math.round(l[i] * 32767))), true); dv.setInt16(o + 2, Math.max(-32768, Math.min(32767, Math.round(r[i] * 32767))), true); o += 4; }
+  const a = document.createElement("a"); const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+  a.href = URL.createObjectURL(new Blob([buf], { type: "audio/wav" })); a.download = `ping-os-1-${stamp}.wav`; a.click();
+  $("recstatus").textContent = `Saved ${fmt(n / recRate)} at ${recRate} Hz.`; $("recstatus").className = "status ok";
+  $("level").style.width = "0";
+});
+if (navigator.mediaDevices) { listInputs(); navigator.mediaDevices.addEventListener("devicechange", listInputs); }
+else $("inputs").textContent = "";
+</script>
+</body>
+</html>

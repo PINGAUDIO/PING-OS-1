@@ -1,0 +1,30 @@
+# PING OS-1 1.0's build settings (fm1-base tools/build.py)
+name = "PING-OS-1"
+id_prefix = "FM-1_888"         # package identity: dev FM-1_88800, releases FM-1_888XXYYZZ (the hub's list: no other firmware starts FM-1_888)
+usb_manufacturer = "PING AUDIO"
+usb_product = "PING OS-1"
+display = "PING OS-1"           # the name as people read it (the installer page); name above is the file names
+o2 = ["../engine/ch_core.c", "../engine/ch_params.c", "../engine/ch_mods.c", "../engine/ch_material.c",
+      "../engine/ch_fx.c", "../engine/ch_grain.c",
+      "../engine/ch_adpcm.c", "../engine/ch_drum.c", "../engine/ch_synth.c",
+      "../engine/ch_fe.c", "../engine/ch_fe_tables.c", "../engine/ch_fe_wheel.c", "../engine/ch_fe_phase.c",
+      "../engine/ch_fe_trio.c", "../engine/ch_fe_lofi.c", "../engine/ch_fe_fm6.c", "../engine/ch_fe_fm6core.c",
+      "../engine/ch_fe_fm6tab.c", "../engine/ch_fe_fm6pat.c",
+      "../engine/ch_mi.c", "../engine/ch_mi_tables.c"]
+# o2_cflags = ["-DCHISEL_FM1"]                # all of it in the flash, as before 2026-11-11
+# the render's core in RAM (ch_platform.h CH_AUDIO_CODE), untried on a device: the far calls it needs, RAM and flash 4 MB apart
+o2_cflags = ["-DCHISEL_FM1", "-DCH_RAM_CODE", "-mllvm", "-pi32v2-large-program=true"]
+include = ["../engine"]
+words = "words.tsv"
+gen = ["gen_wordmark.py {gen}"]   # the splash's wordmark fonts (Jost) -> ping_font.h
+ble = false                    # no radio: its RAM goes to audio buffers
+usb_audio_in = true            # the FM-1 recordable over USB
+usb_audio_out = false
+usb_host = true                # MIDI SYNC, SEND DIRECT: the port a host to another FM-1 behind a powered hub
+cpu2 = true                    # the second core renders some of the tracks (the split by their last times)
+cpu2_fallback = true           # a unit whose second core misreads: one core, not a restart
+# the site (tools/make_site.py)
+tagline = "a four-track rhythm synthesis engine for the FM-1"
+repo = "https://github.com/PINGAUDIO/ping-os-1"
+licence = "MPL-2.0"
+credits = "Built on fm1-base and felucca-bsp. ORGAN, PHASE, TRIO, LOFI and FM6 from Felucca by Leo Kuroshita (Hügelton Instruments); FM6 core after msfa (Apache-2.0). See docs/THIRD_PARTY.md."

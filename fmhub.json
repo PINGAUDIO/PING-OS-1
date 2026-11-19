@@ -1,0 +1,15 @@
+{
+  "what": "A four-track rhythm synthesis engine: 49 drum models, 20 synth models, a sampler, a kit and grains, with 23 effects, four modulators a track, and a step sequencer with ratchets, chance, ties, micro timing and parameter locks.",
+  "author": "PING AUDIO",
+  "kinds": [
+    "groove",
+    "synth",
+    "drums"
+  ],
+  "play": "https://pingaudio.github.io/ping-os-1/#play",
+  "editor": "https://pingaudio.github.io/ping-os-1/#transfer",
+  "cheat": "https://pingaudio.github.io/ping-os-1/manual/PING-OS-1-Shortcuts.pdf",
+  "image": "fmhub-card.png",
+  "color": "#FF8424",
+  "sounds": "own"
+}

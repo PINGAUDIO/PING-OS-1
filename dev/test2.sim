@@ -1,0 +1,18 @@
+wait 400
+shot dev/out/sim_a_splash.bmp
+wait 1800
+tap EDIT
+turn ALGO 3
+shot dev/out/sim_b_drum.bmp
+tap SEQ
+tapkey 2
+turn K3 -4
+shot dev/out/sim_c_step.bmp
+tap OCT-
+tap EDIT
+press SEQ
+turn SELECT 1
+release SEQ
+turn K1 10
+wait 300
+shot dev/out/sim_d_bubbles.bmp

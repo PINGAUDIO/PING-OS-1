@@ -1,0 +1,24 @@
+wait 2000
+shot dev/out/sim_0_steps.bmp
+wav dev/out/sim_groove.wav
+tap PLAY
+wait 2500
+shot dev/out/sim_1_playing.bmp
+tapkey 3
+turn K2 2
+tapkey 6
+shot dev/out/sim_2_edit.bmp
+tap EDIT
+wait 200
+shot dev/out/sim_3_drum.bmp
+tap OCT+
+tap OCT+
+tap OCT+
+press SEQ
+turn SELECT 1
+release SEQ
+turn ALGO 10
+wait 1500
+shot dev/out/sim_4_synth.bmp
+tap PLAY
+wait 300

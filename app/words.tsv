@@ -1,0 +1,11 @@
+# Chisel words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://example.invalid/chisel/words/
+CHISEL	chisel
+DISC	disc
+TAPE	tape
+POLY	poly
+MOSAIC	mosaic
+RING	ring
+DEFORM	deform
+VAST	vast
+BYPASS	bypass
