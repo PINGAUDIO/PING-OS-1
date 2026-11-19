@@ -7,7 +7,6 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 FONT = ROOT / 'app' / 'assets' / 'fonts' / 'Jost[wght].ttf'
-MARK = ROOT / 'app' / 'web' / 'brand' / 'ping-mark.svg'
 ORANGE, WHITE, GRAY = (255, 132, 36), (242, 242, 240), (150, 150, 146)
 # the screens on the right, at their own size: COLS across, four down (python tools/make_card.py DIR OUT [COLS])
 SCREENS = {1: ['tracks_play', 'scope', 'line', 'fx_20'], 2: ['tracks_play', 'scope', 'line', 'step', 'edit_synth', 'fx_20', 'layout_mixer', 'mod']}
@@ -23,17 +22,6 @@ def font(px, wght):
     f.set_variation_by_axes([wght])
     return f
 
-def mark(size):
-    """The PING mark (a square with arcs from its left edge), drawn here as the SVG has it: white lines on black."""
-    s = 4; n = size * s
-    im = Image.new('RGB', (n, n), 'black'); d = ImageDraw.Draw(im)
-    w = max(2, n // 40)
-    for r in (0.22, 0.44, 0.66, 0.88, 1.10):
-        R = r * n
-        d.ellipse((-R, n / 2 - R, R, n / 2 + R), outline=WHITE, width=w)
-    d.rectangle((0, 0, n - 1, n - 1), outline=WHITE, width=w)
-    return im.resize((size, size), Image.LANCZOS)
-
 def main():
     shots = Path(sys.argv[1]); out = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / 'fmhub-card.png'
     N, T, G = 1024, 240, 4                       # the picture, a tile (the screen as it is), the gap
@@ -44,18 +32,19 @@ def main():
         t = Image.open(shots / (name + '.bmp')).convert('RGB')
         im.paste(t, (x0 + (k % cols) * (T + G), y0 + (k // cols) * (T + G)))
     cx = x0 // 2
-    m = mark(140); im.paste(m, (cx - 70, 44))
+    # the logo with its name and tagline: PING AUDIO's own drawing (app/web/brand/ping-os-1-logo.svg, Futura), rendered
+    # white and orange on black as ping-os-1-logo-dark.png (a browser draws it: the type is not in this repository)
+    logo = Image.open(ROOT / 'app' / 'web' / 'brand' / 'ping-os-1-logo-dark.png').convert('RGB')
+    im.paste(logo, (cx - logo.width // 2, 36))
     def text(y, s, f, fill):
         d.text((cx, y), s, font=f, fill=fill, anchor='mt')
-    text(204, 'PING OS-1', font(88, 700), WHITE)
-    text(306, 'RHYTHM SYNTHESIS ENGINE', font(31, 800), ORANGE)
-    text(350, 'by PING AUDIO', font(24, 600), GRAY)
+    text(36 + logo.height + 14, 'by PING AUDIO', font(24, 600), GRAY)
     # the list: a label column and a text column, as on the page; the type as large as the longest line allows
     lx, tx, right = (22, 150, x0 - 14) if cols > 1 else (40, 215, x0 - 24)
     px = 40
     while max(d.textlength(t, font=font(px, 600)) for _, t in ROWS) > right - tx: px -= 1
     fl, ft = font(21 if cols > 1 else 27, 700), font(px, 600)
-    y, pitch = 404, (1004 - 404) // len(ROWS)
+    y, pitch = 440, (1006 - 440) // len(ROWS)
     for lab, t in ROWS:
         d.text((lx, y + pitch // 2), lab, font=fl, fill=ORANGE, anchor='lm')
         d.text((tx, y + pitch // 2), t, font=ft, fill=WHITE, anchor='lm')
