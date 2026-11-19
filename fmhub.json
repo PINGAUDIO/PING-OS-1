@@ -6,9 +6,9 @@
     "synth",
     "drums"
   ],
-  "play": "https://pingaudio.github.io/ping-os-1/#play",
-  "editor": "https://pingaudio.github.io/ping-os-1/#transfer",
-  "cheat": "https://pingaudio.github.io/ping-os-1/manual/PING-OS-1-Shortcuts.pdf",
+  "play": "https://pingaudio.github.io/PING-OS-1/#play",
+  "editor": "https://pingaudio.github.io/PING-OS-1/#transfer",
+  "cheat": "https://pingaudio.github.io/PING-OS-1/manual/PING-OS-1-Shortcuts.pdf",
   "image": "fmhub-card.png",
   "color": "#FF8424",
   "sounds": "own"

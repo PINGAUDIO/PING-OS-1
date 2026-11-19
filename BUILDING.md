@@ -3,7 +3,7 @@
 PING OS-1 is built on [fm1-base](https://github.com/charlesvestal/fm1-base), which is here as a submodule (`base`,
 PING AUDIO's fork: a few additions to the platform, listed in its history). Clone with the submodules:
 
-    git clone --recurse-submodules https://github.com/PINGAUDIO/ping-os-1
+    git clone --recurse-submodules https://github.com/PINGAUDIO/PING-OS-1
 
 ## The firmware
 

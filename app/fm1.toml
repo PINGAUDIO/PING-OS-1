@@ -25,6 +25,6 @@ cpu2 = true                    # the second core renders some of the tracks (the
 cpu2_fallback = true           # a unit whose second core misreads: one core, not a restart
 # the site (tools/make_site.py)
 tagline = "a four-track rhythm synthesis engine for the FM-1"
-repo = "https://github.com/PINGAUDIO/ping-os-1"
+repo = "https://github.com/PINGAUDIO/PING-OS-1"
 licence = "MPL-2.0"
 credits = "Built on fm1-base and felucca-bsp. ORGAN, PHASE, TRIO, LOFI and FM6 from Felucca by Leo Kuroshita (Hügelton Instruments); FM6 core after msfa (Apache-2.0). See docs/THIRD_PARTY.md."
