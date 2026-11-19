@@ -1,0 +1,235 @@
+<!doctype html>
+<!-- PING OS-1's one page: play it in the browser (play/), install, transfer (samples, recording, MIDI, projects), the manual, and the terms. tools/make_installer.py fills
+     1.0, FM-1_888010000 and <svg role="img" aria-label="PING" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 173.29 173.29">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: currentColor;
+        stroke-miterlimit: 10;
+        stroke-width: 5.23px;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M170.67,170.67H2.61V2.61h168.06v168.06ZM2.61,161.34c41.25,0,74.69-33.44,74.69-74.69S43.87,11.95,2.61,11.95M2.61,123.99c20.63,0,37.35-16.72,37.35-37.35S23.24,49.3,2.61,49.3M76.72,170.68c23.26-20.53,37.93-50.57,37.93-84.03S99.98,23.14,76.72,2.61M126.14,170.67c16.32-23.94,25.86-52.87,25.86-84.03,0-31.16-9.54-60.09-25.86-84.03"/>
+</svg> (the PING mark, app/web/brand/ping-mark.svg) and writes it as the site's
+     index.html. The look: text only, a label column and a text column, no boxes. The install and transfer tools are
+     their own pages (install/, transfer/), shown here in a frame: one is loaded at a time, so only one of them ever
+     holds the FM-1's USB port. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PING OS-1</title>
+<link rel="icon" href="brand/ping-favicon.svg">
+<style>
+  @font-face { font-family: "Jost"; src: url("manual/Jost.ttf"); font-weight: 100 900; font-display: swap; }
+  :root { --bg: #0b0b0c; --fg: #f2f2f0; --dim: #7d7d7a; --yel: #dddc01; --pad: 17.5vw; --label: 104px; }   /* (--pad: the margin each side, 17.5 % of the width; less on a narrow screen, below) */
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.55 "Jost", "Segoe UI", system-ui, sans-serif;
+         display: flex; flex-direction: column; -webkit-text-size-adjust: 100%; }
+  header { display: flex; align-items: center; gap: 10px; padding: 26px var(--pad) 0; flex-wrap: wrap; }
+  header svg { width: 18px; height: 18px; display: block; color: var(--fg); flex: none; }
+  .name { letter-spacing: .02em; margin-right: 18px; display: flex; flex-direction: column; line-height: 1.25; }
+  /* the byline under the name, small; its asterisk goes to the note at the foot of the start page */
+  .by { font-size: 11px; letter-spacing: .04em; color: var(--dim); white-space: nowrap; }
+  .by a { border: 0; }
+  .by a:hover, .by button:hover { color: var(--fg); }
+  .by button, .t .star { font: inherit; color: inherit; background: none; border: 0; padding: 0 0 0 1px; cursor: pointer; }
+  .note { font-size: 13px; color: var(--dim); }
+  .note .l { color: var(--dim); }
+  nav { margin-left: auto; display: flex; gap: 4px 22px; flex-wrap: wrap; }
+  nav button, nav a { font: inherit; background: none; border: 0; padding: 4px 0; color: var(--dim); cursor: pointer; text-decoration: none; }
+  nav button:hover, nav a:hover { color: var(--fg); }
+  nav button[aria-selected="true"] { color: var(--fg); }
+  nav button:disabled { opacity: .45; cursor: default; }
+  /* the switch: a sun while it is dark (press for light), a moon while it is light */
+  #mode { display: flex; align-items: center; padding: 4px 0; }
+  #mode svg { width: 15px; height: 15px; display: block; color: inherit; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+  #mode .moon, :root[data-theme="light"] #mode .sun { display: none; }
+  :root[data-theme="light"] #mode .moon { display: block; }
+  :focus-visible { outline: 1px solid var(--fg); outline-offset: 3px; }
+  #frame { flex: 1; width: 100%; border: 0; display: block; background: var(--bg); margin-top: 22px; min-height: 0; }
+  #home, #terms { flex: 1; overflow-y: auto; padding: 64px var(--pad) 80px; }
+  .r { display: flex; margin: 0 0 7px; min-height: 1.55em; }
+  .l { width: var(--label); flex: none; color: var(--dim); }
+  .t { max-width: 640px; min-width: 0; }
+  .gap { height: 1.55em; }
+  .go { font: inherit; color: inherit; background: none; border: 0; padding: 0; text-align: left; cursor: pointer;
+        border-bottom: 1px solid var(--dim); }
+  .go:hover:not(:disabled) { border-bottom-color: var(--fg); }
+  .go:disabled { color: var(--dim); cursor: default; border-bottom-color: transparent; }
+  a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--dim); }
+  a:hover { border-bottom-color: var(--fg); }
+  nav a { border: 0; }
+  .accept { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .accept { color: var(--yel); }
+  .accept input { appearance: none; -webkit-appearance: none; width: 15px; height: 15px; margin: 4px 0 0; flex: none;
+                  border: 2px solid var(--yel); background: none; cursor: pointer; }
+  .accept input:checked { background:
+      linear-gradient(45deg, transparent calc(50% - 1px), var(--yel) calc(50% - 1px), var(--yel) calc(50% + 1px), transparent calc(50% + 1px)),
+      linear-gradient(-45deg, transparent calc(50% - 1px), var(--yel) calc(50% - 1px), var(--yel) calc(50% + 1px), transparent calc(50% + 1px)); }   /* an X, corner to corner */
+  .accept.shut { color: var(--dim); cursor: default; }
+  .accept.shut input { border-color: var(--dim); cursor: default; }
+  .accept input:focus-visible { outline-color: var(--yel); }
+  .dim { color: var(--dim); }
+  [hidden] { display: none !important; }
+  :root[data-theme="light"] { --bg: #f2f2ee; --fg: #111112; --dim: #7a7a76; --yel: #cf3a1c; }   /* (light: the box to tick in PING's red, which reads on a pale ground where the yellow does not) */
+  @media (max-width: 1000px) { :root { --pad: 30px; } }
+  @media (max-width: 640px) {
+    :root { --pad: 18px; --label: 76px; }
+    header { padding-top: 18px; }
+    nav { margin-left: 0; width: 100%; gap: 2px 18px; padding-top: 8px; }
+    #home, #terms { padding-top: 36px; padding-bottom: 56px; }
+    #frame { margin-top: 12px; }
+  }
+</style>
+<script>try { if (localStorage.getItem('ping-os1-theme') !== 'dark') document.documentElement.dataset.theme = 'light'; } catch (e) { document.documentElement.dataset.theme = 'light'; }</script>
+</head>
+<body>
+<header>
+  <svg role="img" aria-label="PING" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 173.29 173.29">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: currentColor;
+        stroke-miterlimit: 10;
+        stroke-width: 5.23px;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M170.67,170.67H2.61V2.61h168.06v168.06ZM2.61,161.34c41.25,0,74.69-33.44,74.69-74.69S43.87,11.95,2.61,11.95M2.61,123.99c20.63,0,37.35-16.72,37.35-37.35S23.24,49.3,2.61,49.3M76.72,170.68c23.26-20.53,37.93-50.57,37.93-84.03S99.98,23.14,76.72,2.61M126.14,170.67c16.32-23.94,25.86-52.87,25.86-84.03,0-31.16-9.54-60.09-25.86-84.03"/>
+</svg>
+  <span class="name">PING OS-1<span class="by"><a href="https://ping.audio" target="_blank" rel="noopener">By PING AUDIO</a><button type="button" id="star" aria-label="About the open-source code included">*</button></span></span>
+  <nav role="tablist" aria-label="Sections">
+    <button role="tab" data-tab="home" aria-selected="true">Start</button>
+    <button role="tab" data-tab="play">Play</button>
+    <button role="tab" data-tab="install" data-gated>Install</button>
+    <button role="tab" data-tab="transfer" data-gated>Transfer</button>
+    <button role="tab" data-tab="manual">Manual</button>
+    <button role="tab" data-tab="terms">Terms</button>
+    <a href="https://ping.audio" target="_blank" rel="noopener">ping.audio</a>
+    <button type="button" id="mode" aria-label="Switch to light">
+      <svg class="sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 .8v2.2M8 13v2.2M.8 8H3M13 8h2.2M2.9 2.9l1.6 1.6M11.5 11.5l1.6 1.6M2.9 13.1l1.6-1.6M11.5 4.5l1.6-1.6"/></svg>
+      <svg class="moon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.6 9.9A6 6 0 0 1 6.1 2.4a6 6 0 1 0 7.5 7.5z"/></svg>
+    </button>
+  </nav>
+</header>
+
+<section id="home">
+  <div class="r"><span class="l">PING OS-1</span><span class="t">A four-track rhythm synthesis engine for the FM-1. Version 1.0.0 by <a href="https://ping.audio" target="_blank" rel="noopener">PING AUDIO</a><button type="button" class="star" aria-label="About the open-source code included">*</button></span></div>
+  <div class="gap"></div>
+  <div class="r"><span class="l">PLAY</span><span class="t"><button class="go" data-go="play">Try it here, in the browser. No FM-1 needed.</button></span></div>
+  <div class="r"><span class="l">INSTALL</span><span class="t"><button class="go" data-go="install" data-gated>Put PING OS-1 on the FM-1, update it, or go back to the stock firmware.</button></span></div>
+  <div class="r"><span class="l">TRANSFER</span><span class="t"><button class="go" data-go="transfer" data-gated>Load your own sounds. Record the FM-1. Save a pattern as MIDI. Save a project for the plugin.</button></span></div>
+  <div class="r"><span class="l">MANUAL</span><span class="t"><button class="go" data-go="manual">Every screen, knob and shortcut. Also as a PDF.</button></span></div>
+  <div class="r" id="locked"><span class="l"></span><span class="t dim">Install and Transfer open once you accept the terms below. Use Chrome or Edge, with the FM-1 on USB.</span></div>
+  <div class="gap"></div>
+  <div class="r"><span class="l">SOUND</span><span class="t">69 sound models: 49 drums and 20 synths. A sampler and a granular engine. A whole drum kit on one track.</span></div>
+  <div class="r"><span class="l">EFFECTS</span><span class="t">23 effects, each drawn live on the screen. Four on every track, four on the master.</span></div>
+  <div class="r"><span class="l">STEPS</span><span class="t">Eight note lanes a track. Parameter locks: any knob, set step by step. Ratchets, chance, ties, micro timing.</span></div>
+  <div class="r"><span class="l">GENERATE</span><span class="t">An algorithmic line generator that writes bass lines and melodies in key. Autopilot, which keeps varying a playing pattern by itself.</span></div>
+  <div class="r"><span class="l">KEY</span><span class="t">Key lock. One key and scale holds every track in tune.</span></div>
+  <div class="r"><span class="l">MOVE</span><span class="t">Four modulators a track. Four macros, each moving several settings at once.</span></div>
+  <div class="r"><span class="l">SONG</span><span class="t">16 patterns a project, chained in song mode.</span></div>
+  <div class="r"><span class="l">LIVE</span><span class="t">Performance mode: the master effects on four knobs, with a stutter under your thumb.</span></div>
+  <div class="r"><span class="l">SEE</span><span class="t">A 3D visualizer of the sound. A custom theme colour: the whole screen in any hue you pick.</span></div>
+  <div class="r"><span class="l">DAW</span><span class="t">The same engine as a VST3 plugin: instrument, effect and MIDI sequencer. A project made on the FM-1 opens in the DAW.</span></div>
+  <div class="gap"></div>
+  <div id="termsbox"></div>
+  <div class="gap"></div>
+  <div class="r note" id="note"><span class="l"></span><span class="t">* PING OS-1 is an original operating system for the FM-1 by PING AUDIO, with an original interface, sequencer, drum kit and 49 drum models, 23 effects, modulators, and synth models of its own, among them ANALOG, ACID and RIPPLE. It also includes open-source work by others, used under their licences and with thanks. Ten of the synth models are ports: ORGAN, PHASE, TRIO, LOFI and FM6 come from Felucca by Leo Kuroshita (H&uuml;gelton Instruments), with FM6 built on msfa, the core of Dexed; FOLD, VOICE, CHORD, STRING and MODAL come from Plaits by Emilie Gillet (Mutable Instruments). It runs on fm1-base and felucca-bsp, the open groundwork for FM-1 firmware. The typeface is Jost by indestructible type. The full notices and licences are published with the source.</span></div>
+</section>
+
+<section id="terms" hidden><div id="termsbox2"></div></section>
+
+<iframe id="frame" title="PING OS-1 tool" hidden allow="midi; microphone; autoplay"></iframe>
+
+<template id="termstext">
+  <div class="r"><span class="l">TERMS</span><span class="t">Read these before you install. <button class="go more" type="button" aria-expanded="false">Show the ten terms</button></span></div>
+  <div class="list">
+  <div class="r"><span class="l">01</span><span class="t">This is unofficial firmware. PING OS-1 is independent, community-made software from PING AUDIO. It is not made, approved, endorsed or supported by M-VAVE or by any other company. FM-1 and M-VAVE are trademarks of their owners and are used here only to say what the software runs on.</span></div>
+  <div class="r"><span class="l">02</span><span class="t">You install it at your own risk. Installing replaces the software your FM-1 came with. It may void the maker's warranty. If a write is interrupted (a pulled cable, a flat battery, a closed browser tab) or fails, the FM-1 may not start. Recovery is often possible but is not guaranteed, and nobody is obliged to help you recover it.</span></div>
+  <div class="r"><span class="l">03</span><span class="t">No warranty. The software and these tools are provided "as is" and "as available", without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, title and non-infringement. Nothing here promises that the software is free of faults, that it will work without interruption, or that it will suit your purpose.</span></div>
+  <div class="r"><span class="l">04</span><span class="t">No liability. To the fullest extent the law allows, the authors, contributors and PING AUDIO are not liable for any damage or loss arising from installing or using the software or these tools: damage to the FM-1 or to any other equipment, loss of data, samples, patterns or recordings, lost work or income, or any direct, indirect, incidental, special or consequential loss, even if told that it could happen.</span></div>
+  <div class="r"><span class="l">05</span><span class="t">Back up first. Installing, updating or going back to the stock firmware can erase what is stored on the FM-1, including presets and settings of the stock firmware and samples and projects of this one. Save anything you want to keep before you start.</span></div>
+  <div class="r"><span class="l">06</span><span class="t">Do not unplug while writing. Keep the FM-1 on USB, charged, and this tab open until the page says it is done.</span></div>
+  <div class="r"><span class="l">07</span><span class="t">Mind your ears and speakers. A synthesiser can make sudden, very loud and very low or high sounds. Start with the volume down, above all on headphones.</span></div>
+  <div class="r"><span class="l">08</span><span class="t">Your samples are your responsibility. Load only audio you have the right to use.</span></div>
+  <div class="r"><span class="l">09</span><span class="t">Privacy. These tools run in your browser and talk to the FM-1 over USB. Your audio, patterns and projects are not sent to any server.</span></div>
+  <div class="r"><span class="l">10</span><span class="t">Licence. PING OS-1 is open source under the Mozilla Public License 2.0, with third-party parts under their own licences, all listed with the source. These terms add to that licence's own disclaimer and take nothing from the rights it gives you.</span></div>
+  </div>
+</template>
+
+<script>
+(function () {
+  // light or dark: light as it starts, the choice kept on this browser and handed to the tool in the frame
+  var TKEY = 'ping-os1-theme', root = document.documentElement, modeBtn = document.getElementById('mode');
+  function theme() { try { return localStorage.getItem(TKEY) === 'dark' ? 'dark' : 'light'; } catch (e) { return 'light'; } }
+  function paint(t) {
+    root.dataset.theme = t; modeBtn.setAttribute('aria-label', t === 'light' ? 'Switch to dark' : 'Switch to light'); modeBtn.title = t === 'light' ? 'Dark' : 'Light';
+    try { var d = document.getElementById('frame').contentDocument; if (d && d.documentElement) d.documentElement.dataset.theme = t; } catch (e) {}
+  }
+  modeBtn.addEventListener('click', function () {
+    var t = root.dataset.theme === 'light' ? 'dark' : 'light';
+    try { localStorage.setItem(TKEY, t); } catch (e) {}
+    paint(t);
+  });
+  paint(theme());
+  document.getElementById('frame').addEventListener('load', function () { paint(root.dataset.theme); });
+  var KEY = 'ping-os1-terms-1';
+  var store = { get: function () { try { return localStorage.getItem(KEY) === 'yes'; } catch (e) { return false; } },
+                set: function (v) { try { v ? localStorage.setItem(KEY, 'yes') : localStorage.removeItem(KEY); } catch (e) {} } };
+  var accepted = store.get();
+  var frame = document.getElementById('frame'), home = document.getElementById('home'), terms = document.getElementById('terms');
+  var SRC = { play: 'play/', install: 'install/', transfer: 'transfer/', manual: 'manual/' };
+  var tpl = document.getElementById('termstext');
+  document.getElementById('termsbox').appendChild(tpl.content.cloneNode(true));
+  document.getElementById('termsbox2').appendChild(tpl.content.cloneNode(true));
+  document.querySelector('#termsbox2 .more').remove();                    // (the Terms tab: always whole)
+  var list = document.querySelector('#termsbox .list'), more = document.querySelector('#termsbox .more');
+  list.hidden = true;
+  more.addEventListener('click', function () {
+    list.hidden = !list.hidden;
+    if (!list.hidden && !opened) { opened = true; gate(); }
+    more.textContent = list.hidden ? 'Show the ten terms' : 'Hide them';
+    more.setAttribute('aria-expanded', list.hidden ? 'false' : 'true');
+  });
+  // the box to tick, on the start page only
+  var row = document.createElement('div'); row.className = 'r';
+  row.innerHTML = '<span class="l"></span><label class="t accept"><input type="checkbox" id="ok"><span><span id="oktext">I have read and understood all of the above, and I accept it. I install and use PING OS-1 at my own risk.</span><span id="okwhy"> Open the terms first.</span></span></label>';
+  document.getElementById('termsbox').appendChild(row);
+  var ok = document.getElementById('ok');
+  var opened = accepted;
+  function gate() {
+    ok.checked = accepted; ok.disabled = !opened;
+    row.querySelector('.accept').classList.toggle('shut', !opened);
+    document.getElementById('okwhy').hidden = opened;
+    document.querySelectorAll('[data-gated]').forEach(function (b) { b.disabled = !accepted; });
+    document.getElementById('locked').hidden = accepted;
+  }
+  ok.addEventListener('change', function () { accepted = ok.checked; store.set(accepted); gate(); });
+  function show(tab) {
+    if ((tab === 'install' || tab === 'transfer') && !accepted) tab = 'home';
+    document.querySelectorAll('nav button[data-tab]').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === tab ? 'true' : 'false'); });
+    home.hidden = tab !== 'home'; terms.hidden = tab !== 'terms';
+    if (tab === 'terms' && !opened) { opened = true; gate(); }       // (the Terms tab shows them whole: that is opening them too)
+    var src = SRC[tab];
+    frame.hidden = !src;
+    if (src) { if (frame.getAttribute('src') !== src) frame.setAttribute('src', src); }
+    else if (frame.getAttribute('src') !== 'about:blank') frame.setAttribute('src', 'about:blank');   // the tool unloaded: it lets go of the FM-1
+    try { history.replaceState(null, '', tab === 'home' ? location.pathname : '#' + tab); } catch (e) {}
+  }
+  document.querySelectorAll('nav button[data-tab]').forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.tab); }); });
+  document.querySelectorAll('.go[data-go]').forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.go); }); });
+  document.querySelectorAll('#star, .star').forEach(function (b) { b.addEventListener('click', function () { show('home'); home.scrollTop = home.scrollHeight; }); });
+  gate();
+  var want = location.hash.slice(1);
+  if (want === 'samples') want = 'transfer';                               // (the page's old name)
+  show(SRC[want] || want === 'terms' ? want : 'home');
+})();
+</script>
+</body>
+</html>
