@@ -28,7 +28,7 @@ def main():
     N, T, G = 1024, 240, 4                       # the picture, a tile (the screen as it is), the gap
     im = Image.new('RGB', (N, N), 'black'); d = ImageDraw.Draw(im)
     cols = int(sys.argv[3]) if len(sys.argv) > 3 else 2
-    x0, y0 = N - cols * (T + G) - (4 if cols > 1 else 18), (N - 4 * T - 3 * G) // 2
+    x0, y0 = N - cols * (T + G) - 22, (N - 4 * T - 3 * G) // 2   # (in from the frame)
     for k, name in enumerate(SCREENS[cols]):
         t = Image.open(shots / (name + '.bmp')).convert('RGB')
         im.paste(t, (x0 + (k % cols) * (T + G), y0 + (k // cols) * (T + G)))
@@ -36,24 +36,26 @@ def main():
     # the logo with its name and tagline: PING AUDIO's own drawing (app/web/brand/ping-os-1-logo.svg, Futura), rendered
     # white and orange on black as ping-os-1-logo-dark.png (a browser draws it: the type is not in this repository)
     logo = Image.open(ROOT / 'app' / 'web' / 'brand' / 'ping-os-1-logo-dark.png').convert('RGB')
-    im.paste(logo, (cx - logo.width // 2, 36))
+    wmax = x0 - 2 * 40                                   # (clear of the frame and of the screens)
+    if logo.width > wmax: logo = logo.resize((wmax, round(logo.height * wmax / logo.width)), Image.LANCZOS)
+    im.paste(logo, (cx - logo.width // 2, 40))
     def text(y, s, f, fill):
         d.text((cx, y), s, font=f, fill=fill, anchor='mt')
-    text(36 + logo.height + 14, 'by PING AUDIO', font(24, 600), GRAY)
     # the list: a coloured square, then the feature, set left and as large as the room allows
     px = 46
-    y0, y1 = 36 + logo.height + 64, 1010
+    y0, y1 = 36 + logo.height + 34, 1006
     pitch = (y1 - y0) // len(ROWS)
-    while max(d.textlength(t, font=font(px, 600)) for t in ROWS) + 46 > x0 - 30 - 24: px -= 1   # (clear of the screens)
+    while max(d.textlength(t, font=font(px, 600)) for t in ROWS) + 46 > x0 - 40 - 24: px -= 1   # (clear of the screens)
     ft = font(px, 600)
     width = max(d.textlength(t, font=ft) for t in ROWS) + 46
-    lx = max(30, cx - int(width / 2))
+    lx = max(40, cx - int(width / 2))
     y = y0
     for k, t in enumerate(ROWS):
         ym = y + pitch // 2
         d.rectangle((lx, ym - 11, lx + 22, ym + 11), fill=ramp(k / (len(ROWS) - 1)))
         d.text((lx + 46, ym), t, font=ft, fill=WHITE, anchor='lm')
         y += pitch
+    d.rectangle((10, 10, N - 11, N - 11), outline=WHITE, width=3)   # the frame: a thin white line, a little in from the edge
     im.save(out, optimize=True)
     print(out, out.stat().st_size, 'bytes')
 
