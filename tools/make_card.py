@@ -10,12 +10,13 @@ FONT = ROOT / 'app' / 'assets' / 'fonts' / 'Jost[wght].ttf'
 ORANGE, WHITE, GRAY = (255, 132, 36), (242, 242, 240), (150, 150, 146)
 # the screens on the right, at their own size: COLS across, four down (python tools/make_card.py DIR OUT [COLS])
 SCREENS = {1: ['tracks_play', 'scope', 'line', 'fx_20'], 2: ['tracks_play', 'scope', 'line', 'step', 'edit_synth', 'fx_20', 'layout_mixer', 'mod']}
-# the page's own list (app/web/home.html), each line cut to what fits
-ROWS = [('SOUND', '69 models + supplemental sampler'), ('EFFECTS', '23, each drawn live'),
-        ('STEPS', 'Parameter locks, ratchets, chance'), ('GENERATE', 'Line generator, autopilot'),
-        ('KEY', 'Key lock across all tracks'), ('MOVE', '4 modulators a track, 4 macros'),
-        ('SONG', '16 patterns, song mode'), ('LIVE', 'Performance mode, stutter'),
-        ('SEE', '3D visualizer, theme colour'), ('DAW', 'VST3 plugin, same engine')]
+# the features, a few words each so they read at the hub's card size; each behind a square in PING's colours
+ROWS = ['49 synthesized drums', '20 synth models', '23 live effects', 'Parameter locks', 'Line generator', 'Autopilot', 'Key lock',
+        'Performance mode', '3D visualizer', 'VST3 plugin']
+STOPS = [(255, 92, 48), (240, 122, 0), (224, 200, 0), (223, 224, 58), (228, 228, 160), (108, 196, 168), (47, 176, 156)]
+def ramp(t):
+    x = t * (len(STOPS) - 1); i = min(int(x), len(STOPS) - 2); f = x - i
+    return tuple(round(STOPS[i][k] + (STOPS[i + 1][k] - STOPS[i][k]) * f) for k in range(3))
 
 def font(px, wght):
     f = ImageFont.truetype(str(FONT), px)
@@ -39,17 +40,20 @@ def main():
     def text(y, s, f, fill):
         d.text((cx, y), s, font=f, fill=fill, anchor='mt')
     text(36 + logo.height + 14, 'by PING AUDIO', font(24, 600), GRAY)
-    # the list: a label column and a text column, as on the page; the type as large as the longest line allows
-    lx, tx, right = (22, 150, x0 - 14) if cols > 1 else (40, 215, x0 - 24)
-    px = 40
-    while max(d.textlength(t, font=font(px, 600)) for _, t in ROWS) > right - tx: px -= 1
-    fl, ft = font(21 if cols > 1 else 27, 700), font(px, 600)
-    y, pitch = 440, (1006 - 440) // len(ROWS)
-    for lab, t in ROWS:
-        d.text((lx, y + pitch // 2), lab, font=fl, fill=ORANGE, anchor='lm')
-        d.text((tx, y + pitch // 2), t, font=ft, fill=WHITE, anchor='lm')
+    # the list: a coloured square, then the feature, set left and as large as the room allows
+    px = 46
+    y0, y1 = 36 + logo.height + 64, 1010
+    pitch = (y1 - y0) // len(ROWS)
+    while max(d.textlength(t, font=font(px, 600)) for t in ROWS) + 46 > x0 - 30 - 24: px -= 1   # (clear of the screens)
+    ft = font(px, 600)
+    width = max(d.textlength(t, font=ft) for t in ROWS) + 46
+    lx = max(30, cx - int(width / 2))
+    y = y0
+    for k, t in enumerate(ROWS):
+        ym = y + pitch // 2
+        d.rectangle((lx, ym - 11, lx + 22, ym + 11), fill=ramp(k / (len(ROWS) - 1)))
+        d.text((lx + 46, ym), t, font=ft, fill=WHITE, anchor='lm')
         y += pitch
-    print('list type', px, 'px')
     im.save(out, optimize=True)
     print(out, out.stat().st_size, 'bytes')
 

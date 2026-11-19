@@ -1,5 +1,5 @@
 {
-  "what": "A four-track rhythm synthesis engine: 49 drum and 20 synth models, a supplemental sampler and granular engine, 23 effects and parameter locks. One-click algorithmic line generation, Autopilot for automatic variation, macros, performance mode, 3D visualizer, theme colours and a VST plugin suite.",
+  "what": "A four-track rhythm synthesis engine: 49 synthesized drum models, 20 synth models, a supplemental sampler and granular engine, 23 effects, parameter locks. One-click algorithmic line generation, Autopilot for automatic variation, macros, performance mode, 3D visualizer, theme colours, VST plugins.",
   "author": "PING AUDIO",
   "kinds": [
     "groove",
