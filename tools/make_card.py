@@ -11,7 +11,7 @@ ORANGE, WHITE, GRAY = (255, 132, 36), (242, 242, 240), (150, 150, 146)
 # the screens on the right, at their own size: COLS across, four down (python tools/make_card.py DIR OUT [COLS])
 SCREENS = {1: ['tracks_play', 'scope', 'line', 'fx_20'], 2: ['tracks_play', 'scope', 'line', 'step', 'edit_synth', 'fx_20', 'layout_mixer', 'mod']}
 # the page's own list (app/web/home.html), each line cut to what fits
-ROWS = [('SOUND', '69 models, sampler, granular'), ('EFFECTS', '23, each drawn live'),
+ROWS = [('SOUND', '69 models + supplemental sampler'), ('EFFECTS', '23, each drawn live'),
         ('STEPS', 'Parameter locks, ratchets, chance'), ('GENERATE', 'Line generator, autopilot'),
         ('KEY', 'Key lock across all tracks'), ('MOVE', '4 modulators a track, 4 macros'),
         ('SONG', '16 patterns, song mode'), ('LIVE', 'Performance mode, stutter'),

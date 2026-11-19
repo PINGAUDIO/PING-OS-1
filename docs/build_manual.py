@@ -26,7 +26,7 @@ def ol(items): D.append(('ol', items))
 
 h1('PING OS-1')
 p('A four-track rhythm synthesis engine for the M-VAVE FM-1, by PING AUDIO (ping.audio). Version ' + VERSION + '.')
-ul(['**69 sound models**: 49 drums and 20 synths, plus a sampler and a granular engine',
+ul(['**69 sound models**: 49 drums and 20 synths, plus a supplemental sampler and granular engine',
     '**23 effects**, four on every track and four on the master, each drawn live on the screen',
     '**A step sequencer** with eight note lanes a track, parameter locks, ratchets, chance, ties and micro timing',
     '**A line generator and an autopilot**: one writes bass lines and melodies in key, the other keeps varying a playing pattern',
