@@ -11,7 +11,7 @@ ORANGE, WHITE, GRAY = (255, 132, 36), (242, 242, 240), (150, 150, 146)
 # the screens on the right, at their own size: COLS across, four down (python tools/make_card.py DIR OUT [COLS])
 SCREENS = {1: ['tracks_play', 'scope', 'line', 'fx_20'], 2: ['tracks_play', 'scope', 'line', 'step', 'edit_synth', 'fx_20', 'layout_mixer', 'mod']}
 # the features, a few words each so they read at the hub's card size; each behind a square in PING's colours
-ROWS = ['49 synthesized drums', '20 synth models', '23 live effects', 'Parameter locks', 'Line generator', 'Autopilot', 'Key lock',
+ROWS = ['49 synthesized drums', '20 synth models', '23 modular FX', 'Parameter locks', 'Line generator', 'Autopilot', 'Key lock',
         'Performance mode', '3D visualizer', 'VST3 plugin']
 STOPS = [(255, 92, 48), (240, 122, 0), (224, 200, 0), (223, 224, 58), (228, 228, 160), (108, 196, 168), (47, 176, 156)]
 def ramp(t):

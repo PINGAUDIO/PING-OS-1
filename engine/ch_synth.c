@@ -848,7 +848,7 @@ static void voice_run(ch_svoice *v, const sparams *P, float *out, unsigned n)
     float wb0 = 0, wbd = 0, wa0 = 1, wad = 0;             /* the sweep on CUTOFF (added to it) and on the level (times it), at the block's start, and a frame's step */
     const int wamp = v->model == WOBBLE && (int)(P->rwin * 2 + 0.5f) >= 1;   /* TARGET: AMP or BOTH */
     if (v->model == WOBBLE) {
-        const int ri = (int)(ch_clamp(P->harm, 0, 1) * (WOB_RATES - 1) + 0.5f), sync = ri < WOB_SYNC, retrig = P->wtrig > 0.5f;
+        const int ri = (int)(ch_clamp(P->harm, 0, 1) * (WOB_RATES - 1) + 0.5f), sync = ri < WOB_SYNC, retrig = P->wtrig > 0.5f, once = P->wtrig > 1.5f;   /* TRIG: FREE, RETRIG, ONCE (one sweep from the note, then held where it ends) */
         const float bpc = sync ? WOB_BEATS[ri] : 1;
         const float dph = sync ? (float)n * ch_t.beats_per_frame / bpc : (float)n * WOB_HZ[ri - WOB_SYNC] * (1.0f / (float)CH_RATE);
         float p0, wf[2], wa[2];
@@ -866,9 +866,12 @@ static void voice_run(ch_svoice *v, const sparams *P, float *out, unsigned n)
         if (retrig && v->n == 0) v->fb = 0;
         if (!retrig && sync && ch_t.playing) p0 = (float)ch_t.beat / bpc;   /* (wrapped below; in single precision, as the chip has it) */
         else p0 = v->fb;
-        p0 = wrap1(p0); v->fb = wrap1(p0 + dph);
+        if (once) { p0 = ch_min(p0, 1); v->fb = ch_min(p0 + dph, 1); }   /* (not wrapped: it stops at the sweep's end) */
+        else { p0 = wrap1(p0); v->fb = wrap1(p0 + dph); }
         for (unsigned k = 0; k < 2; ++k) {
-            float p = wrap1(p0 + off + (k ? dph : 0)), a = wob_shape(k0, p);
+            float p = p0 + (k ? dph : 0), a;
+            if (once && p > 0.9999f) p = 0.9999f;
+            p = wrap1(p + off); a = wob_shape(k0, p);
             a += (wob_shape(k0 + 1, p) - a) * fr;           /* 1 open .. 0 shut */
             if (P->wbi) {                                /* BIPOLAR: the sweep swings both ways round CUTOFF (and the level round its own), half of DEPTH each way; under 0 it starts the other way */
                 wf[k] = tg == 1 ? 0 : d * 0.5f * (2 * a - 1) * ch_min(P->cut, 1 - P->cut) * 2;

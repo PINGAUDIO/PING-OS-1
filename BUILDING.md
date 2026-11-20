@@ -10,10 +10,10 @@ PING AUDIO's fork: a few additions to the platform, listed in its history). Clon
 fm1-base's build (`base/tools/build.py`; its notes say what it needs) uses the JieLi toolchain and, for Bluetooth, the
 AC79 SDK. With those in place:
 
-    python3 base/tools/build.py app --release 1.0
+    python3 base/tools/build.py app --release 1.0.1
 
-writes `app/build/ping-os-1-1.0.fwsc`, the package the installer page and M-VAVE's own updater take. On Windows,
-`dev\fwbuild.ps1 --release 1.0` runs the same build in Docker, with the toolchain in `%USERPROFILE%\.jieli`.
+writes `app/build/ping-os-1-1.0.1.fwsc`, the package the installer page and M-VAVE's own updater take. On Windows,
+`dev\fwbuild.ps1 --release 1.0.1` runs the same build in Docker, with the toolchain in `%USERPROFILE%\.jieli`.
 
 The factory project (`app/factory.h`) comes from `assets/factory/default.pingos` through `tools/make_factory.py` (`--pattern-1`), and
 the start-up sound (`app/sound_logo.h`) from `assets/ping_sound_logo.wav` through `tools/make_sound_logo.py`.

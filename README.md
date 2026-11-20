@@ -1,15 +1,15 @@
 # PING OS-1
 
-A four-track rhythm synthesis engine for the M-VAVE FM-1, by PING AUDIO (ping.audio). Version 1.0.0.
+A four-track rhythm synthesis engine for the M-VAVE FM-1, by PING AUDIO (ping.audio). Version 1.0.1.
 
 - **69 sound models**: 49 synthesized drums and 20 synths, plus a supplemental sampler and granular engine
-- **23 effects**, four on every track and four on the master, each drawn live on the screen
+- **23 modular FX**, four on every track and four on the master, each drawn live on the screen
 - **A step sequencer** with eight note lanes a track, parameter locks, ratchets, chance, ties and micro timing
 - **A line generator and an autopilot**: one writes bass lines and melodies in key, the other keeps varying a playing pattern
 - **Key lock**: one key and scale for every track
 - **Four modulators** a track and four macros
 - **16 patterns** a project, chained in song mode, and 16 sound presets
-- **Performance mode**, a 3D visualizer and a custom theme colour
+- **Performance mode**, a 3D visualizer and custom theme colors
 - **A VST3 plugin** with the same engine, and a browser page to try it, install it, load samples and record
 
 ## Quick start
@@ -162,7 +162,7 @@ A full subtractive synth on eight pages. Two oscillators whose SHAPE runs from s
 
 ### ACID and WOBBLE
 
-ACID is a one-voice acid bass: notes over velocity 100 are accented and a note tied into the next one slides. WOBBLE is ANALOG with a filter sweep locked to the tempo: RATE, DEPTH and SHAPE set the sweep.
+ACID is a one-voice acid bass: notes over velocity 100 are accented and a note tied into the next one slides. WOBBLE is ANALOG with a filter sweep locked to the tempo: RATE, DEPTH and SHAPE set the sweep. TRIG chooses how it runs: FREE (on the beat), RETRIG (from the top at each note) or ONCE (a single sweep for each note, then it stays where it ends).
 
 ### Layouts
 
@@ -222,6 +222,7 @@ Four macros are shared by all tracks. Press <kbd>OCT-</kbd> and <kbd>OCT+</kbd> 
 - **TYPE** runs from all random notes to nearly all root notes. **DENSITY** is how many steps play.
 - **ACCENT** and **GATE** set how hard the accents hit and how long the notes are.
 - The knobs reshape the line that is there; <kbd>ARP</kbd> draws a fresh one.
+- Before a line is drawn, **GATE** sets the length of the notes already on the track, so a phrase of your own can be shortened without replacing it.
 - White keys 1 to 4 choose which layers are redrawn: notes, accents, gates, octaves.
 - <kbd>EDIT</kbd> + <kbd>REC</kbd> undoes the last line.
 
@@ -233,11 +234,11 @@ Four macros are shared by all tracks. Press <kbd>OCT-</kbd> and <kbd>OCT+</kbd> 
 
 | Page | K1 to K4 |
 |---|---|
-| KEY / TEMPO | The master key and scale, TEMPO and SWING. Tap tempo: hold <kbd>GLO</kbd> and tap <kbd>PLAY</kbd>. |
+| KEY / TEMPO | The master key and scale, TEMPO and SWING. The keys light as a keyboard: play a note to hear it and make it the key. Tap tempo: hold <kbd>GLO</kbd> and tap <kbd>PLAY</kbd>. |
 | MIX LEVEL | The level of each track. <kbd>ALGO</kbd> is the return level of everything sent to the master effects. |
 | MIX PAN | The pan of each track. |
 | MIX FILTER | A one-knob filter on each track. |
-| SENDS | The chosen track into the master effects (FX SEND), and into each of the other three tracks. |
+| SENDS | The chosen track into the master effects (its own send: T1 SEND for track 1), and into each of the other three tracks. |
 | SEND TO | Where in the master chain each track's send goes in. |
 | SONG | Chains patterns: an entry, its pattern, how many bars, and song mode on or off. |
 | AUTOPILOT | Varies the sounds and patterns by itself. See below. |

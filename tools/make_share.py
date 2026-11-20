@@ -15,28 +15,27 @@ BORDER = ['tracks_play', 'scope', 'line', 'step', 'edit_synth', 'layout_mixer', 
           'fx_20', 'envelope', 'perform', 'fx_10', 'macros',
           'library', 'fx_04', 'glo_autopilot', 'edit_kit', 'fx_09', 'key_tempo', 'song',
           'step_synth', 'fx_14', 'master', 'step_lock', 'browser']
-ROWS = [('SOUND', '49 synthesized drums, 20 synths, a supplemental sampler'),
-        ('EFFECTS', '23 effects, each drawn live. Up to 20 at once'),
+ROWS = [('SOUND', '49 synthesized drums, 20 synths, granular and one-shot sampler'),
+        ('EFFECTS', '23 modular FX. Up to 20 at once'),
         ('STEPS', 'Parameter locks, ratchets, chance, ties, micro timing'),
         ('GENERATE', 'One-click algorithmic line generator'),
-        ('AUTOPILOT', 'Let your tracks transform and breathe on their own'),
+        ('AUTOPILOT', 'Autopilot mode for hands-free noodling'),
         ('KEY', 'Key lock: one key and scale holds every track in tune'),
         ('MOVE', 'Four modulators a track, four macros'),
         ('SONG', '16 patterns, chained in song mode'),
-        ('LIVE', 'Performance mode with stutter'),
-        ('SEE', '3D visualizer, custom theme colour'),
+        ('LIVE', 'Performance mode with stutter and snapback'),
+        ('SEE', '3D visualizer, custom theme colors'),
         ('DAW', 'VST3 plugin suite, and it plays in the browser')]
-FOOT = 'Free and open source for the M-VAVE FM-1'
+FOOT = ('Available NOW at The Firmware Hub', 'thefirmwarehub.com')   # (what it says, then where)
 # without the labels (the picture's "plain" form) a line that leaned on its label says the word itself
-PLAIN = {'AUTOPILOT': 'Autopilot lets your tracks transform and breathe',
-         'SOUND': '49 synthesized drums, 20 synths, a supplemental sampler',
+PLAIN = {'SOUND': '49 synthesized drums, 20 synths, granular and one-shot sampler',
          'KEY': 'Key lock holds every track in one key and scale'}
 # the same features as one paragraph (the picture's "para" form); *...* is set in the colours, one after another
-PARA = ('*49 synthesized drum models* and 20 synth models, plus a supplemental sampler. *23 effects*, each drawn live, up to 20 at once. '
+PARA = ('*49 synthesized drum models* and 20 synth models, plus a granular and one-shot sampler. *23 modular FX*, up to 20 at once. '
         '*Parameter locks*, ratchets, chance, ties and micro timing on every step. A one-click *algorithmic line generator*, '
-        'and an *Autopilot* that lets your tracks transform and breathe on their own. *Key lock* holds every track in tune. '
-        'Four modulators a track and *four macros*. 16 patterns chained in *song mode*, a *performance mode* with stutter, '
-        'a *3D visualizer* and a custom theme colour. A *VST3 plugin suite*, and it plays in the browser.')
+        'and an *Autopilot* mode for hands-free noodling. *Key lock* holds every track in tune. '
+        'Four modulators a track and *four macros*. 16 patterns chained in *song mode*, a *performance mode* with stutter and snapback, '
+        'a *3D visualizer* and custom theme colors. A *VST3 plugin suite*, and it plays in the browser.')
 # the labels run through PING's colours, top to bottom: red, orange, yellow, pale, teal
 STOPS = [(255, 92, 48), (240, 122, 0), (224, 200, 0), (223, 224, 58), (228, 228, 160), (108, 196, 168), (47, 176, 156)]
 def ramp(t):
@@ -64,7 +63,7 @@ def main():
     cx = N // 2
     y = T + 46
     im.paste(logo, (cx - logo.width // 2, y)); y += logo.height + 16
-    d.text((cx, y), 'by PING AUDIO', font=font(30, 600), fill=GRAY, anchor='mt'); y += 74
+    y += 48
     bottom = N - T - 100
     if len(sys.argv) > 4 and sys.argv[4] == 'para':          # one paragraph, set in the middle: the features run on, a
         f = font(35, 500); lh = 54                           # coloured dot between them
@@ -125,7 +124,11 @@ def main():
             d.text((b0 + 16, ym), lab, font=fl, fill=col, anchor='lm')
             d.text((tx, ym), t, font=ft, fill=WHITE, anchor='lm')
             y += pitch
-    d.text((cx, N - T - 52), FOOT, font=font(28, 600), fill=GRAY, anchor='mt')
+    ff = font(28, 600); gap = 18
+    w0, w1 = d.textlength(FOOT[0], font=ff), d.textlength(FOOT[1], font=ff)
+    x = cx - (w0 + gap + w1) / 2
+    d.text((x, N - T - 52), FOOT[0], font=ff, fill=GRAY, anchor='lt')
+    d.text((x + w0 + gap, N - T - 52), FOOT[1], font=ff, fill=ORANGE, anchor='lt')
     im.save(out, optimize=True)
     print(out, im.size, out.stat().st_size, 'bytes')
 

@@ -1925,6 +1925,17 @@ static void gen_key(int white, int black)
     } else return;
     song_sync_lane(); ui.redraw = 1;
 }
+/* GATE with no line of the generator's on the track (the page just opened, nothing drawn yet): the notes the track
+ * has, each as long as the knob says. A note the next step ties on from stays whole, or the tie would have nothing to hold */
+static void gen_gate_all(unsigned t)
+{
+    unsigned len = ch_seq_get(t)->len ? ch_seq_get(t)->len : 16, pc = (unsigned)(ui.gen[G_GATE] * 100 + 0.5f);
+    for (unsigned l = 0; l < CH_LANES; ++l) for (unsigned i = 0; i < len; ++i) {
+        ch_step st = ch_seq_get(t)->step[l][i];
+        if (!st.vel || ch_seq_get(t)->step[l][(i + 1) % len].tie) continue;
+        ch_step_gate_set(&st, pc < 7 ? 7 : pc); ch_step_set(t, l, i, &st);
+    }
+}
 static void gen_open(void);
 static void gen_again_here(void)                       /* HOME + ARP in TRACKS, SEQ + ARP in the step view: a new line at the generator's values, the view kept */
 {
@@ -1984,12 +1995,14 @@ static void edit_gen(unsigned i, int32_t det)
         int_text((int32_t)(ui.gen[k] * 100 + 0.5f), v); app_say(GEN_NAME[k], v);
     }
     if (ui.gen_seed && !ui.gen_hold) { gen_apply(ui.track); song_sync_lane(); }   /* (held: the track waits for ARP) */
+    else if (k == G_GATE) gen_gate_all(ui.track);        /* (but GATE: the notes already there take it) */
     ui.redraw = 1;
 }
 /* EDIT + ARP: the page, to set the line up; nothing is drawn into the track until ARP alone */
 static void gen_open_held(void)
 {
     ui.view = V_GEN; ui.mfx = 0; ui.gen_hold = 1; ui.redraw = 1;
+    ch_undo_mark(); ui.undo_fwd = 0;                     /* (GATE may change the notes that are there: EDIT + REC puts them back) */
     if (!ui.gen_seed) for (unsigned k = 0; k < 8; ++k) ui.gen[k] = GEN_DEF[k];
     app_say("LINE", "ARP AGAIN: DRAW");
 }
@@ -2711,7 +2724,9 @@ static void input(void)
                 else { unsigned n = ch_seq_get((unsigned)black)->note[0]; ch_note((unsigned)black, n, 100); ui.pad_note[black] = (uint8_t)n; }
                 continue;
             }
-            if ((ui.view == V_MIX || mixer_on()) && !(btn & ((1u << B_SEQ) | (1u << B_LFO) | (1u << B_SAVE) | (1u << B_EDIT) | (1u << B_HOME) | (1u << B_REC)))
+            int keypg = ui.view == V_MIX && ui.mix_page == 4 && !btn;   /* the KEY page: a key played is the key note, and is heard (below) */
+            if (keypg) { ui.key_root = (uint8_t)((53u + k) % 12u + 1u); key_apply(); app_say("KEY", KEY_NAME[ui.key_root]); ui.redraw = 1; }
+            else if ((ui.view == V_MIX || mixer_on()) && !(btn & ((1u << B_SEQ) | (1u << B_LFO) | (1u << B_SAVE) | (1u << B_EDIT) | (1u << B_HOME) | (1u << B_REC)))
                 && ((white >= 0 && white < CH_TRACKS) || (black >= 0 && black < CH_TRACKS))) {   /* the MIX pages, and wherever the MIXER footer is up: white 1-4 a track's mute, black 1-4 its solo */
                 mix_keys(white, black);
                 ui.redraw = 1; continue;
@@ -3005,6 +3020,11 @@ static void input(void)
             klit &= ~w; kdim &= ~w; kdark &= ~w;
             if (ch_track_get(t)->mute) klit |= w; else kdim |= w;
             if (!pads) { klit &= ~b; kdim &= ~b; kdark &= ~b; if (ui.solo_mask ? (ui.solo_mask >> t & 1u) : so == (int)t) klit |= b; else kdim |= b; }
+        }
+        if (ui.view == V_MIX && ui.mix_page == 4) {          /* the KEY page: the keyboard, every key dim and the key note full in each octave */
+            klit = 0; kdim = (1u << NKEYS) - 1u;
+            if (ui.key_root) for (unsigned k = 0; k < NKEYS; ++k) if ((53u + k) % 12u + 1u == ui.key_root) klit |= 1u << k;
+            kdim &= ~klit;
         }
     }
     if ((btn >> B_SAVE & 1u) || (btn >> B_EDIT & 1u)) {     /* SAVE or EDIT held: the presets on the white keys */
@@ -4550,7 +4570,8 @@ static const char *glo_name(unsigned page, unsigned i)
         {"COLOURS", "TONE", "PANEL ROW", "MIDI SYNC"}, {"SEND TO 1", "SEND TO 2", "SEND TO 3", "SEND TO 4"}, {"AUTOPILOT", "EVERY", "VARIETY", "WHEN OFF"},
         {"MICRO", "COUNT IN", "LIMITER", "HOLD FX"}};
     static const char *const SN[4] = {"TO T1", "TO T2", "TO T3", "TO T4"};
-    if (page == 3 && i) return SN[send_other(ui.track, i - 1u)];
+    static const char *const TS[4] = {"T1 SEND", "T2 SEND", "T3 SEND", "T4 SEND"};   /* K1 on SENDS: the chosen track's send into the master effects */
+    if (page == 3) return i ? SN[send_other(ui.track, i - 1u)] : TS[ui.track % 4u];
     return N[page][i];
 }
 static void body_glolist(void)
@@ -4900,13 +4921,12 @@ static void body(void)
             unsigned k = ch_track_get(i)->ss_dest; k = k > CH_SS_FX && k <= CH_SS_LAST ? k - CH_SS_FX : 0;
             tile4(x, ENC_LBL[i], TN8[i], SV[k], SW[k], 0, 0, 0, 1);
         } else if (ui.mix_page == 4) {
-            if (i == 0) tile4(x, ENC_LBL[i], "KEY", KEY_NAME[ui.key_root], 0, (float)ui.key_root / 12.0f, (float)ui.key_root / 12.0f, 0, 1);
+            if (i == 0) tile4(x, ENC_LBL[i], "KEY", KEY_NAME[ui.key_root], "OR PLAY IT", (float)ui.key_root / 12.0f, (float)ui.key_root / 12.0f, 0, 1);
             else if (i == 1) tile4(x, ENC_LBL[i], "KEY SCALE", SCALE_NAME[ui.key_scale], 0, (float)ui.key_scale / (SCALES - 1), (float)ui.key_scale / (SCALES - 1), 0, ui.key_root != 0);
             else if (i == 2) { char v[12]; int_text((int32_t)(ch_tempo() + 0.5f), v); tile4(x, ENC_LBL[i], "TEMPO", v, "BPM", (ch_tempo() - 24) / 260.0f, (ch_tempo() - 24) / 260.0f, 0, 1); }
             else { char v[12]; int_text((int32_t)(50 + ch_swing() * 25 + 0.5f), v); text_cat(v, "%"); tile4(x, ENC_LBL[i], "SWING", v, 0, ch_swing(), ch_swing(), 0, 1); }
         } else {
             static const char *const TN[4] = {"TRACK 1", "TRACK 2", "TRACK 3", "TRACK 4"};
-            static const char *const SN[4] = {"TO T1", "TO T2", "TO T3", "TO T4"};
             const ch_track_state *tt = ch_track_get(ui.mix_page == 3 ? ui.track : i);
             unsigned so = ui.mix_page == 3 && i ? send_other(ui.track, i - 1u) : 0;   /* the SENDS page: K1 FX SEND, K2..K4 the other tracks */
             float v = ui.mix_page == 0 ? tt->level : ui.mix_page == 1 ? tt->pan : ui.mix_page == 2 ? tt->filter : i == 0 ? tt->tofx : tt->send[so];
@@ -4914,7 +4934,7 @@ static void body(void)
             float live = v;                              /* (where a modulator or a macro has it now) */
             if (ui.mix_page < 3) live = fm_clampf(v + ch_snapshot_get()->mixmod[i][ui.mix_page], bip ? -1.0f : 0.0f, 1);
             int_text((int32_t)(v * 100 + (v < 0 ? -0.5f : 0.5f)), val);
-            tile4(x, ENC_LBL[i], ui.mix_page == 3 ? (i ? SN[so] : "FX SEND") : TN[i], val, 0, v, live, bip, 1);
+            tile4(x, ENC_LBL[i], ui.mix_page == 3 ? glo_name(3, i) : TN[i], val, 0, v, live, bip, 1);
         }
     }
     if (fxhint) {                                        /* how the effects come on: grey, on the empty panel */

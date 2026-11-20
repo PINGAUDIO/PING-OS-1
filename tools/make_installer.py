@@ -13,7 +13,7 @@ from make_site import strip_module, product_of          # noqa: E402  (fm1-base'
 from build import read_conf                              # noqa: E402
 
 pkg = Path(sys.argv[1]) if len(sys.argv) > 1 else None   # default: the package build.py writes for the name in app/fm1.toml (set below)
-version = sys.argv[2] if len(sys.argv) > 2 else '1.0'
+version = sys.argv[2] if len(sys.argv) > 2 else '1.0.1'
 out = ROOT / 'dev' / 'out' / 'installer'
 conf = read_conf(ROOT / 'app' / 'fm1.toml')
 if pkg is None:

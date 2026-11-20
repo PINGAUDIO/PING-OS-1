@@ -53,7 +53,7 @@ static const ch_param_desc grain_p[] = {
     U("DENSITY", 0.8f), U("SPRAY", 0.2f), U("SPREAD", 0.5f), U("RELEASE", 0.5f),
     U("LEVEL", 0.8f), U("VELOCITY", 1.0f), U("ATTACK", 0)};
 static const char *const synth_voices[] = {"4", "2", "1", "LEGATO", 0};
-static const char *const wob_trig[] = {"FREE", "RETRIG", 0};
+static const char *const wob_trig[] = {"FREE", "RETRIG", "ONCE", 0};
 static const ch_param_desc synth[] = {
     {"MODEL", CH_SELECT, CH_SYNTH_MODELS, 0, 0, ch_synth_names}, BM("PITCH", 0, pitch_modes), U("HARMONICS", 0.5f),
     U("TIMBRE", 0.5f), U("MORPH", 0.5f), U("DECAY", 0.45f), U("LPG", 0.5f), {"MODE", CH_SELECT, 3, 1, 0, synth_modes},
@@ -66,7 +66,7 @@ static const ch_param_desc synth[] = {
     /* RIPPLE's: its noise, the sync window, the AM (a ratio of the note, its depth and feedback), the jitter */
     U("NOISE", 0), U("WINDOW", 0), U("AM RATIO", 0.25f), U("AM DEPTH", 0), U("AM FDBK", 0), U("JITTER", 0), U("J RATE", 0.4f),
     {"VOICES", CH_SELECT, 4, 0, 0, synth_voices},    /* the notes at once: 4, 2, 1; LEGATO: one, and a note played over a held one takes its voice on, nothing starting again */
-    {"TRIG", CH_SELECT, 2, 0, 0, wob_trig}};          /* WOBBLE's: its sweep running on (FREE), or from the top at each note */
+    {"TRIG", CH_SELECT, 3, 0, 0, wob_trig}};          /* WOBBLE's: its sweep running on (FREE), from the top at each note (RETRIG), or one sweep a note (ONCE) */
 /* the effects (ch_fx.c): each a page of four (DELAY and ECHO a second page) */
 static const char *const filter_types[] = {"LOW PASS", "HIGH PASS", "BAND PASS", "NOTCH", 0};
 static const char *const filter_slopes[] = {"12 DB", "24 DB", 0};

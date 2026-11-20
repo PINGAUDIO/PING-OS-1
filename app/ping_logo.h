@@ -50,7 +50,7 @@ static void lg_at(float t, lg_state *g)
 }
 
 enum { WORD_Y = 146, TAG_Y = 176 };   /* the name under the mark (it ends at 138), the tagline; v1.0 in the corner */
-#define APP_VERSION_SHORT "1.0.0"
+#define APP_VERSION_SHORT "1.0.1"
 static void logo_frame(uint32_t ms)
 {
     float t = (float)ms * 0.001f;
