@@ -1,5 +1,5 @@
 {
-  "what": "A four-track rhythm synthesis engine: 49 synthesized drum models, 20 synth models, supplemental sampler, granular engine, 23 modular FX, parameter locks. One-click algorithmic line generation, Autopilot mode for hands-free noodling, macros, performance mode, 3D visualizer, theme colors, VST plugins.",
+  "what": "A rhythm synthesis groovebox: 69 synthesized drum and synth models (59 original), a deep sequencer with locks, ties, probability, cycles and ratchets, plus 23 chainable effects. A line generator writes in key; Autopilot evolves your tracks endlessly. Stutter, macros, snap-back controls, sampler, granular, DAW plugins. Built for the FM-1, playable in your browser.",
   "author": "PING AUDIO",
   "kinds": [
     "groove",
