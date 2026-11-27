@@ -25,7 +25,7 @@ gen_font.FONTDIRS.append(APP / "assets" / "fonts")
 
 FONTS = [("WORD", "Jost[wght].ttf@wght=700", 26, 32, 95), ("TAG", "Jost[wght].ttf@wght=900", 12, 32, 95),
          ("FOOT", "Jost[wght].ttf@wght=700", 7, 32, 126)]   # the tagline black, to tell it apart; the footnote has lower case
-TEXT = {"WORD": "PING OS-1", "TAG": "RHYTHM SYNTHESIS ENGINE", "FOOT": "v1.0.1"}
+TEXT = {"WORD": "PING OS-1", "TAG": "RHYTHM SYNTHESIS ENGINE", "FOOT": "v1.0.2"}
 
 
 def main(out):

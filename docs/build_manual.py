@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 IMG = ROOT / 'docs' / 'img'
 OUT = ROOT / 'docs' / 'manual'
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 
 # ---------------------------------------------------------------- the document
 # blocks: ('h1'|'h2'|'h3', text) ('p', text) ('shots', [(file, caption), ...]) ('panel', file) ('table', [cols], [rows])

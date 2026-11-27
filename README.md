@@ -1,6 +1,6 @@
 # PING OS-1
 
-A four-track rhythm synthesis engine for the M-VAVE FM-1, by PING AUDIO (ping.audio). Version 1.0.1.
+A four-track rhythm synthesis engine for the M-VAVE FM-1, by PING AUDIO (ping.audio). Version 1.0.2.
 
 - **69 sound models**: 49 synthesized drums and 20 synths, plus a supplemental sampler and granular engine
 - **23 modular FX**, four on every track and four on the master, each drawn live on the screen

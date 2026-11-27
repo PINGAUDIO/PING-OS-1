@@ -73,7 +73,7 @@
 #include "logo.h"
 #include "ping_logo.h"
 
-enum { V_DEVICE, V_MOD, V_MIX, V_STEP, V_SONG, V_PERFORM, V_GEN, V_SCOPE, V_HELP };   /* V_HELP: GLO + SAVE, the panel drawn and what each control does */
+enum { V_DEVICE, V_MOD, V_MIX, V_STEP, V_SONG, V_PERFORM, V_GEN, V_SCOPE, V_HELP };   /* V_HELP: GLO + SAVE, what each control does, in large type */
 /* (was)   /* V_SCOPE: GLO + HOME, the output as a figure */
 /* V_SONG: HOME, the four tracks' patterns as one grid;
                                                               * V_PERFORM: HOME + FX, the master effects' amounts on K1..K4;
@@ -4602,19 +4602,8 @@ static void body_glolist(void)
     }
     if (top + (int32_t)rows * SH < 232) { cv_begin(240, (uint32_t)(232 - top - (int32_t)rows * SH), C_BLACK); cv_blit(0, (uint32_t)(top + (int32_t)rows * SH)); }
 }
-/* ---- HELP (GLO + SAVE): the panel as a line drawing, white on black, every control with its name; the one last
- * touched filled in, and under the drawing what it does. Nothing acts while it is open. ---- */
-static void help_disc(int32_t cx, int32_t cy, int32_t r, uint16_t c)
-{
-    for (int32_t dy = -r; dy <= r; ++dy) { int32_t dx = 0; while ((dx + 1) * (dx + 1) + dy * dy <= r * r + r / 2) ++dx; cv_rect(cx - dx, cy + dy, 2 * dx + 1, 1, c); }
-}
-static void help_knob(int32_t cx, int32_t cy, int32_t r, const char *name, int on)
-{
-    help_disc(cx, cy, r, C_WHITE);
-    if (!on) help_disc(cx, cy, r - 1, C_BLACK);
-    cv_rect(cx, cy - r + 1, 1, r - 1, on ? C_BLACK : C_WHITE);
-    cv_text(cx - text_w(&FONT_T, name) / 2, cy + r, &FONT_T, name, C_WHITE);
-}
+/* ---- HELP (GLO + SAVE): the whole screen in large type. The control last touched: its name, what it does, and the
+ * shortcuts it takes part in (the shortcut in the accent, what it does beside it). Nothing acts while it is open. ---- */
 static void help_box(int32_t x, int32_t y, int32_t w, int32_t h, const char *name, int on)
 {
     cv_rect(x, y, w, h, C_WHITE);
@@ -4623,82 +4612,55 @@ static void help_box(int32_t x, int32_t y, int32_t w, int32_t h, const char *nam
 }
 static void body_help(void)
 {
-    static const char *const NAME[24] = {"HELP", "FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC", "OCT-", "OCT+",
-        "SELECT", "ALGORITHM", "PRESETS", "KNOB 1", "KNOB 2", "KNOB 3", "KNOB 4", "WHITE KEYS", "BLACK KEYS"};
-    static const char *const KN[4] = {"THE FOUR SETTINGS ON THE SCREEN, LEFT TO RIGHT", "LFO + A KNOB: MAP THE MODULATOR TO IT", "SEQ + A KNOB: THAT SETTING'S MODE", "REC + STEPS, THEN A KNOB: A LOCK ON THEM"};
-    static const char *const T[24][4] = {
-        {"PRESS A BUTTON OR A KEY, OR TURN A KNOB,", "TO SEE WHAT IT DOES.", "NOTHING IS CHANGED WHILE HELP IS OPEN.", "GLO + SAVE: BACK"},
-        {"THE TRACK'S EFFECTS, FOUR SLOTS", "TAP AGAIN: THE NEXT SLOT. HOLD: ON OR OFF", "ALGORITHM PICKS THE SLOT'S EFFECT", "GLO + FX: MASTER EFFECTS. HOME + FX: PERFORM"},
-        {"THE BROWSER", "SEL + ALGORITHM: THE TRACK'S LEVEL", "SEL ON A SET STEP + SELECT: MOVE THE STEP", ""},
-        {"THE KEYS PLAY THE TRACK, OR SET STEPS AGAIN", "ENV + WHITE 1 TO 4: MUTE A TRACK", "ENV + BLACK 1 TO 4: SOLO A TRACK", "SEQ + ENV: THE ENVELOPE"},
-        {"THE MODULATORS", "LFO + A KNOB: MAP THE MODULATOR TO IT", "LFO + WHITE 1 TO 4: CHOOSE THE MODULATOR", "LFO + REC: CLEAR ITS MAPS"},
-        {"THE TRACK'S ENGINE AND ITS PAGES", "TAP AGAIN: THE LAYOUT. HOLD: ON OR OFF", "EDIT + A WHITE KEY: LOAD A PRESET", "EDIT + REC: UNDO"},
-        {"GLOBAL: TEMPO, KEY, MIX, SENDS, SONG", "SELECT TURNS ITS PAGES", "GLO + PLAY: TAP THE TEMPO. GLO + EDIT: LOAD", "GLO + HOME: SPECTRUM. GLO + SAVE: HELP"},
-        {"THE TRACKS VIEW: THE FOUR PATTERNS", "HOME + A WHITE KEY: CHOOSE A PATTERN", "HOME + SEQ + A WHITE KEY: COPY IT THERE", "HOME + KNOB 1, 2: STUTTER. KNOB 3: HOLD FX"},
-        {"TAP: THE LIBRARY. HOLD: SAVE THE PROJECT", "SAVE + A WHITE KEY: STORE A PRESET", "IN THE BROWSER: KEEP THE CHOICE", "SEQ + SAVE: INIT"},
-        {"THE LINE GENERATOR", "ON ITS PAGE, TAP AGAIN: A NEW LINE", "HOLD: A NEW LINE ON THE CHOSEN TRACK", ""},
-        {"THE TRACK'S STEP SEQUENCER", "THE KEYS SET STEPS. HOLD A STEP TO EDIT IT", "SEQ + A KNOB: THAT SETTING'S MODE", "SEQ + WHITE 12 TO 16: GENERATORS. SEQ + REC: CLEAR"},
-        {"PLAY AND STOP", "GLO + PLAY: TAP THE TEMPO", "", ""},
-        {"RECORD WHAT IS PLAYED", "HELD, THEN LET GO: THE METRONOME", "REC + STEPS: ARM THEM FOR KNOB LOCKS", "EDIT + REC: UNDO"},
-        {"THE KEYBOARD AN OCTAVE DOWN", "IN THE SEQUENCER: THE LANES AN OCTAVE DOWN", "OCT- AND OCT+ TOGETHER: THE MACROS ON THE KNOBS", ""},
-        {"THE KEYBOARD AN OCTAVE UP", "IN THE SEQUENCER: THE LANES AN OCTAVE UP", "OCT- AND OCT+ TOGETHER: THE MACROS ON THE KNOBS", ""},
-        {"TURNS THE PAGES", "IN THE SEQUENCER: THE CHOSEN STEP", "EDIT + SELECT: THE TRACK'S SCALE", ""},
-        {"PICKS THE ENGINE, OR THE SLOT'S EFFECT", "SEL + ALGORITHM: THE TRACK'S LEVEL", "EDIT + ALGORITHM: THE TRACK'S KEY", "SEQ + ALGORITHM: THE SCALE"},
-        {"CHOOSES THE TRACK, 1 TO 4", "EDIT + PRESETS: THE LANES A SEMITONE", "", ""},
-        {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0},
-        {"PLAY NOTES, OR SET STEPS IN THE SEQUENCER", "WITH HOME: PATTERNS. WITH SAVE, EDIT: PRESETS", "ON THE GLO PAGES, 1 TO 4: MUTE A TRACK", ""},
-        {"PLAY NOTES", "A STEP HELD + BLACK KEYS: A CHORD", "ON THE GLO PAGES, 1 TO 4: SOLO A TRACK", ""}};
+    static const char *const NAME[24] = {"HELP", "FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC", "OCT-", "OCT+", "SELECT", "ALGORITHM", "PRESETS", "KNOB 1", "KNOB 2", "KNOB 3", "KNOB 4", "WHITE KEYS", "BLACK KEYS"};
+    static const char *const T[21][11] = {   /* two lines of what it is, then "THE SHORTCUT|WHAT IT DOES" (the four knobs share the one after PRESETS) */
+        {"PRESS ANY BUTTON OR KEY,", "OR TURN A KNOB, FOR INFO", "GLO + SAVE|EXIT HELP", "PRESETS KNOB|TRACK 1-4", "WHITE + BLACK KEYS|PLAY", "HOME + WHITE|PATTERN", "ENV + WHITE 1-4|MUTE", "ENV + BLACK 1-4|SOLO", "GLO + PLAY|TAP TEMPO", "EDIT + REC|UNDO"},
+        {"THE TRACK'S EFFECTS,", "FOUR SLOTS", "TAP AGAIN|NEXT SLOT", "HOLD|SLOT ON / OFF", "ALGORITHM|PICK THE EFFECT", "GLO + FX|MASTER EFFECTS", "HOME + FX|PERFORM"},
+        {"THE BROWSER", "", "SEL + ALGORITHM|TRACK LEVEL", "SEL + SELECT|MOVE THE STEP"},
+        {"THE KEYS PLAY THE TRACK,", "OR SET STEPS AGAIN", "ENV + WHITE 1-4|MUTE", "ENV + BLACK 1-4|SOLO", "SEQ + ENV|ENVELOPE"},
+        {"THE MODULATORS", "", "LFO + KNOB|MAP IT THERE", "LFO + WHITE 1-4|MODULATOR", "LFO + REC|CLEAR ITS MAPS"},
+        {"THE TRACK'S ENGINE", "AND ITS PAGES", "TAP AGAIN|LAYOUT", "HOLD|ON / OFF", "EDIT + WHITE|LOAD PRESET", "EDIT + REC|UNDO", "EDIT + SELECT|TRACK SCALE", "EDIT + ALGORITHM|TRACK KEY", "EDIT + PRESETS|SHIFT LANES"},
+        {"GLOBAL: TEMPO, KEY,", "MIX, SENDS, SONG", "SELECT|TURN ITS PAGES", "GLO + PLAY|TAP TEMPO", "GLO + EDIT|LOAD", "GLO + HOME|SPECTRUM", "GLO + FX|MASTER EFFECTS", "GLO + SAVE|HELP"},
+        {"THE TRACKS VIEW:", "THE FOUR PATTERNS", "SEL / ALG KNOBS|NAVIGATE", "HOME + WHITE|PATTERN", "HOME + SEQ + WHITE|COPY", "HOME + KNOB 1, 2|STUTTER", "HOME + KNOB 3|HOLD FX", "HOME + FX|PERFORM", "GLO + HOME|SPECTRUM"},
+        {"TAP: THE LIBRARY", "HOLD: SAVE THE PROJECT", "SAVE + WHITE|STORE PRESET", "IN THE BROWSER|KEEP CHOICE", "SEQ + SAVE|INIT", "GLO + SAVE|HELP"},
+        {"THE LINE GENERATOR", "", "TAP AGAIN|NEW LINE", "HOLD|NEW LINE ON TRACK"},
+        {"THE TRACK'S STEP SEQUENCER", "", "SEL / ALG KNOBS|NAVIGATE", "KEYS|SET STEPS", "HOLD A STEP|EDIT IT", "SEQ + SELECT|PAGE", "SEQ + KNOB|SETTING'S MODE", "SEQ + REC|CLEAR", "SEQ + ENV|ENVELOPE", "SEQ + WHITE 12-16|GENERATORS", "HOME + SEQ + WHITE|COPY"},
+        {"PLAY AND STOP", "", "GLO + PLAY|TAP TEMPO"},
+        {"RECORD WHAT IS PLAYED", "", "HOLD, LET GO|METRONOME", "REC + STEPS|ARM FOR LOCKS", "EDIT + REC|UNDO", "SEQ + REC|CLEAR", "LFO + REC|CLEAR MAPS"},
+        {"THE KEYBOARD", "AN OCTAVE DOWN", "IN THE SEQUENCER|LANES DOWN", "OCT- + OCT+|MACROS"},
+        {"THE KEYBOARD", "AN OCTAVE UP", "IN THE SEQUENCER|LANES UP", "OCT- + OCT+|MACROS"},
+        {"TURNS THE PAGES", "", "TRACKS, SEQUENCER|STEP", "SEQ + SELECT|SEQUENCER PAGE", "EDIT + SELECT|TRACK SCALE", "SEL + SELECT|MOVE THE STEP"},
+        {"PICKS THE ENGINE,", "OR THE SLOT'S EFFECT", "IN TRACKS|TRACK UP / DOWN", "IN THE SEQUENCER|LANE", "SEL + ALGORITHM|TRACK LEVEL", "EDIT + ALGORITHM|TRACK KEY", "SEQ + ALGORITHM|SCALE"},
+        {"CHOOSES THE TRACK,", "1 TO 4", "EDIT + PRESETS|SHIFT LANES"},
+        {"THE FOUR SETTINGS", "ON THE SCREEN", "LFO + KNOB|MAP MODULATOR", "SEQ + KNOB|SETTING'S MODE", "REC + STEPS + KNOB|LOCK", "HOME + KNOB 1, 2|STUTTER", "HOME + KNOB 3|HOLD FX"},
+        {"PLAY NOTES, OR SET STEPS", "IN THE SEQUENCER", "HOME + WHITE|PATTERN", "SAVE + WHITE|STORE PRESET", "EDIT + WHITE|LOAD PRESET", "ENV + WHITE 1-4|MUTE", "LFO + WHITE 1-4|MODULATOR", "SEQ + WHITE 12-16|GENERATORS"},
+        {"PLAY NOTES", "", "STEP HELD + BLACK|CHORD", "ENV + BLACK 1-4|SOLO"}};
     const unsigned sel = ui.help_sel < 24 ? ui.help_sel : 0;
-#define HB(b) (sel == 1u + (b))
-#define HE(e) (sel == 15u + (e))
+    const char *const *t = T[sel < 18 ? sel : sel < 22 ? 18 : sel - 3];
+    const char *foot = sel ? "GLO + SAVE: EXIT" : "NOTHING CHANGES WHILE HELP IS OPEN";
+    int32_t y = t[1][0] ? 79 : 62;
+    cv_begin(240, (uint32_t)y, C_BLACK);
+    cv_text(8, 2, &FONT_L, NAME[sel], C_WHITE);
+    cv_text(8, 36, &FONT_B, t[0], C_HI);
+    cv_text(8, 53, &FONT_B, t[1], C_HI);
+    cv_rect(8, y - 5, 224, 1, C_LINE);
+    cv_blit(0, 0);
+    for (unsigned k = 2; k < 11 && t[k]; ++k, y += 18) {
+        char a[24]; unsigned n = 0;
+        const char *q = t[k];
+        while (*q && *q != '|' && n < 23) a[n++] = *q++;
+        a[n] = 0;
+        cv_begin(240, 18, C_BLACK);
+        cv_text(cv_text(8, 0, &FONT_B, a, RGB(255, 132, 36)) + 10, 0, &FONT_B, *q ? q + 1 : q, C_HI);
+        cv_blit(0, (uint32_t)y);
+    }
+    if (y < 226) lcd_fill(0, (uint32_t)y, 240, (uint32_t)(226 - y), C_BLACK);
     cv_begin(240, 14, C_BLACK);
-    cv_text(6, 1, &FONT_XS, "HELP", C_WHITE);
-    cv_text(234 - text_w(&FONT_T, "GLO + SAVE: BACK"), 3, &FONT_T, "GLO + SAVE: BACK", C_GRAY);
-    cv_blit(0, 40);
-    /* the panel's top: the knobs and OCT at the left, the screen, the four knobs and the two rows of buttons */
-    cv_begin(240, 80, C_BLACK);
-    cv_rect(2, 0, 236, 1, C_WHITE); cv_rect(0, 2, 1, 78, C_WHITE); cv_rect(239, 2, 1, 78, C_WHITE); cv_rect(1, 1, 1, 1, C_WHITE); cv_rect(238, 1, 1, 1, C_WHITE);
-    help_knob(18, 12, 6, "MASTER", 0); help_knob(52, 12, 6, "SELECT", HE(EN_SELECT));
-    help_knob(18, 40, 6, "PRESET", HE(EN_PRESET)); help_knob(52, 40, 6, "ALGO", HE(EN_ALGO));
-    help_box(4, 62, 29, 13, "OCT-", HB(B_OCTDN)); help_box(37, 62, 29, 13, "OCT+", HB(B_OCTUP));
-    help_box(72, 4, 40, 36, 0, 0);
-    cv_text(92 - text_w(&FONT_T, "SCREEN") / 2, 17, &FONT_T, "SCREEN", C_GRAY);
-    for (unsigned i = 0; i < 4; ++i) { static const char *const K[4] = {"K1", "K2", "K3", "K4"}; help_knob(134 + (int32_t)i * 30, 12, 6, K[i], HE(EN_K1 + i)); }
-    {
-        static const uint8_t R1[6] = {B_FX, B_SEL, B_ENV, B_LFO, B_EDIT, B_GLO}, R2[6] = {B_HOME, B_SAVE, B_ARP, B_SEQ, B_PLAY, B_REC};
-        for (unsigned i = 0; i < 6; ++i) {
-            help_box(98 + (int32_t)i * 23, 45, 24, 14, NAME[1 + R1[i]], HB(R1[i]));
-            help_box(98 + (int32_t)i * 23, 61, 24, 14, NAME[1 + R2[i]], HB(R2[i]));
-        }
-    }
-    cv_blit(0, 54);
-    /* the keys: eleven black above, sixteen white below */
-    cv_begin(240, 34, C_BLACK);
-    cv_rect(0, 0, 1, 32, C_WHITE); cv_rect(239, 0, 1, 32, C_WHITE); cv_rect(2, 33, 236, 1, C_WHITE); cv_rect(1, 32, 1, 1, C_WHITE); cv_rect(238, 32, 1, 1, C_WHITE);
-    cv_rect(4, 0, 232, 1, C_GRAY);
-    for (unsigned i = 0; i < 16; ++i) help_box(6 + (int32_t)i * 14 + (int32_t)i / 2, 17, 12, 13, 0, sel == 22);
-    { static const uint8_t AFTER[11] = {0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 14};
-      for (unsigned k = 0; k < 11; ++k) { unsigned a = AFTER[k] + 1u; help_box(6 + (int32_t)a * 14 + (int32_t)a / 2 - 7, 4, 12, 11, 0, sel == 23); } }
-    cv_blit(0, 134);
-    /* what the one touched does */
-    cv_begin(240, 64, C_BLACK);
-    cv_text(6, 2, &FONT_XS, NAME[sel], C_WHITE);
-    for (unsigned k = 0; k < 4; ++k) {
-        const char *l = sel >= 18 && sel <= 21 ? KN[k] : T[sel][k];
-        if (!l || !l[0]) continue;
-        const char *q = l; char t[60]; unsigned n = 0;
-        while (q[n] && n < 59) { t[n] = q[n]; ++n; }
-        t[n] = 0;
-        while (n > 1 && text_w(&FONT_T, t) > 230) t[--n] = 0;
-        cv_text(6, 18 + (int32_t)k * 11, &FONT_T, t, k ? C_GRAY : C_HI);
-    }
-    cv_blit(0, 168);
-#undef HB
-#undef HE
+    cv_text(8, 1, &FONT_T, foot, C_GRAY);
+    cv_blit(0, 226);
 }
 static void body(void)
 {
-    if (ui.view == V_HELP) { body_help(); return; }
     if (ui.view == V_SCOPE) { body_scope(); return; }
     if (ui.view == V_STEP) { body_steps(); return; }
     if (ui.view == V_SONG) { body_song(); return; }
@@ -5558,6 +5520,8 @@ void app_frame(void)
         if (ui.redraw || now - last_meter > 100u) { lib_draw(now); ui.redraw = 0; last_meter = now; }
     } else if (brw.open) {                              /* the BROWSER: the same */
         if (ui.redraw || now - last_meter > 100u) { brw_draw(now); ui.redraw = 0; last_meter = now; }
+    } else if (ui.view == V_HELP) {                     /* HELP: the whole screen, when it changes */
+        if (ui.redraw) { body_help(); ui.redraw = 0; }
     } else if (ui.redraw || now - last_meter > 40u) {     /* meters, playheads and live values ~25 times a second */
         header();
         body();
